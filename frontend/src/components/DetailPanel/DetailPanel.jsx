@@ -1,6 +1,6 @@
 import { STATUS_COLORS, ORBIT_COLORS } from '../../data/satellites'
 
-function DetailPanel({ satellite }) {
+function DetailPanel({ satellite, missionIntel, intelLoading, intelError }) {
   return (
     <aside style={{
       width: '320px',
@@ -173,6 +173,54 @@ function DetailPanel({ satellite }) {
             }}>
               {satellite.description}
             </p>
+          </Section>
+
+          {/* AI summary */}
+          <Section title="MISSION SUMMARY">
+            {intelLoading && (
+              <p style={{
+                fontFamily: 'JetBrains Mono',
+                fontSize: '0.58rem',
+                lineHeight: 1.8,
+                color: 'var(--primary)',
+                letterSpacing: '0.05em'
+              }}>
+                GENERATING SUMMARY...
+              </p>
+            )}
+            {!intelLoading && intelError && (
+              <p style={{
+                fontFamily: 'JetBrains Mono',
+                fontSize: '0.58rem',
+                lineHeight: 1.8,
+                color: '#ff7b7b',
+                letterSpacing: '0.03em'
+              }}>
+                {intelError}
+              </p>
+            )}
+            {!intelLoading && !intelError && missionIntel && (
+              <p style={{
+                fontFamily: 'JetBrains Mono',
+                fontSize: '0.6rem',
+                lineHeight: 1.8,
+                color: 'var(--text-dim)',
+                letterSpacing: '0.03em'
+              }}>
+                {missionIntel}
+              </p>
+            )}
+            {!intelLoading && !intelError && !missionIntel && (
+              <p style={{
+                fontFamily: 'JetBrains Mono',
+                fontSize: '0.58rem',
+                lineHeight: 1.8,
+                color: 'var(--text-ghost)',
+                letterSpacing: '0.05em'
+              }}>
+                NO SUMMARY AVAILABLE
+              </p>
+            )}
           </Section>
 
           {/* Lock confirmed indicator */}

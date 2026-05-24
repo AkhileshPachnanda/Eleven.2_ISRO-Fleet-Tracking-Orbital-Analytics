@@ -1,26 +1,41 @@
 import NodeCache from "node-cache";
 
-console.log(
-  "Groq API key loaded:",
-  process.env.GROQ_API_KEY
-    ? "YES (length: " + process.env.GROQ_API_KEY.length + ")"
-    : "NO",
-);
-
 // Cache Groq responses per satellite — 1 hour
 // No point regenerating the same summary repeatedly
 const cache = new NodeCache({ stdTTL: 60 * 60 });
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
+function getGroqApiKey() {
+  const raw = process.env.GROQ_API_KEY || "";
+  // Handle accidental quoting or trailing spaces in .env
+  return raw.trim().replace(/^['"]|['"]$/g, "");
+}
+
+function sanitizeModelOutput(text) {
+  if (!text) return "";
+
+  // Remove internal reasoning blocks if a model emits them.
+  const withoutThinkBlocks = text.replace(/<think>[\s\S]*?<\/think>/gi, "");
+
+  // Remove stray think tags if the block is malformed.
+  const withoutThinkTags = withoutThinkBlocks.replace(/<\/?think>/gi, "");
+
+  return withoutThinkTags.trim();
+}
+
 export async function getMissionIntel(satellite) {
-  const cacheKey = `groq_${satellite.id}`;
+  const cacheKey = `groq_v3_${satellite.id}`;
   const cached = cache.get(cacheKey);
 
   if (cached) return { intel: cached, source: "cache" };
 
-  if (!process.env.GROQ_API_KEY) {
-    throw new Error("GROQ_API_KEY not configured");
+  const apiKey = getGroqApiKey();
+
+  if (!apiKey) {
+    const configError = new Error("GROQ_API_KEY not configured");
+    configError.status = 500;
+    throw configError;
   }
 
   const prompt = `You are a mission control analyst for ISRO (Indian Space Research Organisation).
@@ -34,29 +49,42 @@ Launch date: ${satellite.launched}
 Mass: ${satellite.mass}kg
 Description: ${satellite.description}
 
-Format: Three sentences only. First sentence: current operational status. Second sentence: primary mission function. Third sentence: strategic significance to India.`;
+Format: Three sentences only. First sentence: current operational status. Second sentence: primary mission function. Third sentence: strategic significance to India.
+Do not include internal reasoning, analysis, or <think> tags. Return only final answer text.`;
 
   const response = await fetch(GROQ_URL, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "llama3-8b-8192",
+      model: "qwen/qwen3-32b",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 200,
       temperature: 0.2,
+      reasoning_effort: "none",
+      reasoning_format: "hidden",
     }),
   });
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`Groq API error: ${response.status} — ${err}`);
+    if (response.status === 401) {
+      const authError = new Error(
+        "Groq auth failed (401): invalid/expired GROQ_API_KEY in backend environment",
+      );
+      authError.status = 401;
+      throw authError;
+    }
+    const apiError = new Error(`Groq API error: ${response.status} — ${err}`);
+    apiError.status = response.status;
+    throw apiError;
   }
 
   const data = await response.json();
-  const intel = data.choices[0].message.content.trim();
+  const rawIntel = data.choices?.[0]?.message?.content || "";
+  const intel = sanitizeModelOutput(rawIntel) || rawIntel.trim();
 
   cache.set(cacheKey, intel);
   return { intel, source: "live" };

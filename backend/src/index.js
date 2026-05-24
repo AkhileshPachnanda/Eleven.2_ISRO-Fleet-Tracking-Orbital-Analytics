@@ -1,5 +1,7 @@
-import 'dotenv/config'
+import dotenv from 'dotenv'
 import express from 'express'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import { logger } from './middleware/logger.js'
 import { corsMiddleware } from './middleware/cors.js'
 import { rateLimiter } from './middleware/rateLimit.js'
@@ -7,6 +9,10 @@ import { errorHandler } from './middleware/errorHandler.js'
 import healthRouter from './routes/health.js'
 import tleRouter from './routes/tle.js'
 import groqRouter from './routes/groq.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+dotenv.config({ path: path.resolve(__dirname, '../.env') })
 
 const app = express()
 const PORT = process.env.PORT || 3001
