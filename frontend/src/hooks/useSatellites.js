@@ -9,11 +9,16 @@ export function useSatellites(timeOffset = 0) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const satellitesRef = useRef([])
+  const timeOffsetRef = useRef(timeOffset)
   const intervalRef = useRef(null)
+
+  useEffect(() => {
+    timeOffsetRef.current = timeOffset
+  }, [timeOffset])
 
   // Compute and update live positions
   function computePositions(satsWithTLE) {
-    const simulatedTime = new Date(Date.now() + timeOffset)
+    const simulatedTime = new Date(Date.now() + timeOffsetRef.current)
 
     const enriched = satsWithTLE.map(sat => {
       if (!sat.tle) return { ...sat, position: null }
