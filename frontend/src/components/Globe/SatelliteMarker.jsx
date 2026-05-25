@@ -38,7 +38,9 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
   const radius = 1 + position.alt / 6371
   const pos = latLngToVector3(position.lat, position.lng, radius)
 
-  const dotColor = isSelected ? '#4F46E5' : ORBIT_DOT_COLORS[satellite.orbitType] || '#6B93D6'
+  const dotColor = satellite.isSpecial 
+    ? '#FFD700' 
+    : (isSelected ? '#4F46E5' : ORBIT_DOT_COLORS[satellite.orbitType] || '#A0A0A0')
 
   // Calculate distance from camera to determine detail level
   const cameraDistRef = useRef(10)
@@ -90,7 +92,7 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
       {/* Dot marker — always visible, primary at overview zoom */}
       {!isSelected && (
         <mesh ref={dotRef}>
-          <sphereGeometry args={[0.012, 16, 16]} />
+          <sphereGeometry args={[satellite.isSpecial ? 0.02 : 0.012, 16, 16]} />
           <meshBasicMaterial
             color={dotColor}
             transparent
@@ -102,11 +104,11 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
       {/* Glow around dot */}
       {!isSelected && (
         <mesh>
-          <sphereGeometry args={[0.02, 16, 16]} />
+          <sphereGeometry args={[satellite.isSpecial ? 0.035 : 0.02, 16, 16]} />
           <meshBasicMaterial
             color={dotColor}
             transparent
-            opacity={isHovered ? 0.3 : 0.12}
+            opacity={satellite.isSpecial ? (isHovered ? 0.5 : 0.3) : (isHovered ? 0.3 : 0.12)}
           />
         </mesh>
       )}
@@ -131,7 +133,7 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
       </mesh>
 
       {/* Hover tooltip */}
-      {(isHovered || isSelected) && (
+      {(isHovered || isSelected || (satellite.isSpecial && cameraDistRef.current < 4)) && (
         <Html
           center={false}
           position={[0.03, 0.03, 0]}
@@ -148,9 +150,9 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
             borderRadius: '6px',
             background: isSelected ? 'rgba(79, 70, 229, 0.1)' : 'rgba(26, 26, 30, 0.75)',
             backdropFilter: 'blur(4px)',
-            border: `1px solid ${isSelected ? 'rgba(79, 70, 229, 0.2)' : 'rgba(255, 255, 255, 0.06)'}`,
+            border: `1px solid ${isSelected ? 'rgba(79, 70, 229, 0.2)' : (satellite.isSpecial ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255, 255, 255, 0.06)')}`,
           }}>
-            {satellite.name}
+            {satellite.isSpecial ? '⭐ ' : ''}{satellite.name}
           </div>
         </Html>
       )}
