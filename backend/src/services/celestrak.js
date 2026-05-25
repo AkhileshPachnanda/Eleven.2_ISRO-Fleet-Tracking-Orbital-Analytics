@@ -1,8 +1,8 @@
 import NodeCache from 'node-cache'
 
-// Cache TLE data for 6 hours
+// Cache TLE data for 30 minutes (prevents LEO drift for objects like ISS)
 // stdTTL = standard time-to-live in seconds
-const cache = new NodeCache({ stdTTL: 6 * 60 * 60 })
+const cache = new NodeCache({ stdTTL: 30 * 60 })
 
 const CELESTRAK_BASE = 'https://celestrak.org/NORAD/elements/gp.php'
 

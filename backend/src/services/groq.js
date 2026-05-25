@@ -38,19 +38,26 @@ export async function getMissionIntel(satellite) {
     throw configError;
   }
 
-  const prompt = `You are a mission control analyst for ISRO (Indian Space Research Organisation).
-Write a 3-sentence operational briefing for the following satellite.
-Be terse, technical, and factual. No fluff.
+  const prompt = `You are an expert Science Communicator for ISRO, skilled at explaining complex space missions to the general public.
+Write a 3-sentence summary for the following satellite that is easy to digest for a layman, focusing on its practical real-world value.
+Avoid dense technical jargon and acronyms. Keep the tone clear, engaging, and factual.
 
-Satellite: ${satellite.name}
-Mission type: ${satellite.mission}
-Orbit: ${satellite.orbitType}
-Launch date: ${satellite.launched}
-Mass: ${satellite.mass}kg
-Description: ${satellite.description}
+Satellite Data:
+- Name: ${satellite.name}
+- Mission type: ${satellite.mission}
+- Orbit: ${satellite.orbitType}
+- Launch date: ${satellite.launched}
+- Mass: ${satellite.mass}kg
+- Description: ${satellite.description}
 
-Format: Three sentences only. First sentence: current operational status. Second sentence: primary mission function. Third sentence: strategic significance to India.
-Do not include internal reasoning, analysis, or <think> tags. Return only final answer text.`;
+Format Requirements (Exactly 3 sentences):
+1. Identity & Status: Introduce the satellite and its active status in simple terms.
+2. Primary Purpose: Explain exactly what it does in everyday language (e.g., instead of "optical multispectral payload", use "takes high-resolution photos of Earth").
+3. Real-World Impact: State the strategic significance or how it helps India (e.g., aiding farmers, disaster management, or communications).
+
+Strict Constraints:
+- Do not include any internal reasoning, analysis, or <think> tags.
+- Return ONLY the final 3-sentence text. No introductory remarks, labels, or extra formatting.`;
 
   const response = await fetch(GROQ_URL, {
     method: "POST",
@@ -62,7 +69,7 @@ Do not include internal reasoning, analysis, or <think> tags. Return only final 
       model: "qwen/qwen3-32b",
       messages: [{ role: "user", content: prompt }],
       max_tokens: 200,
-      temperature: 0.2,
+      temperature: 0.4,
       reasoning_effort: "none",
       reasoning_format: "hidden",
     }),
