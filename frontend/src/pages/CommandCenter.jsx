@@ -1,18 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
-import Sidebar from '../components/Sidebar/Sidebar'
-import GlobePanel from '../components/Globe/GlobePanel'
-import DetailPanel from '../components/DetailPanel/DetailPanel'
+import { motion } from 'framer-motion'
+import TopBar from '../components/TopBar/TopBar'
+import GlobeCanvas from '../components/Globe/GlobeCanvas'
+import SatelliteDrawer from '../components/SatelliteDrawer/SatelliteDrawer'
+import SatelliteDetail from '../components/SatelliteDetail/SatelliteDetail'
+import OrbitLegend from '../components/UI/OrbitLegend'
 import { useSatellites } from '../hooks/useSatellites'
 import { fetchMissionIntel } from '../lib/api'
 
 function CommandCenter() {
   const [selectedSatellite, setSelectedSatellite] = useState(null)
+  const [isListOpen, setIsListOpen] = useState(false)
   const [intelBySatellite, setIntelBySatellite] = useState({})
   const [intelLoading, setIntelLoading] = useState(false)
   const [intelError, setIntelError] = useState(null)
   const intelCacheRef = useRef({})
   const { satellites, loading, error } = useSatellites()
 
+  // Fetch mission intel when satellite selected
   useEffect(() => {
     let cancelled = false
 
@@ -70,29 +75,52 @@ function CommandCenter() {
     }
   }, [selectedSatellite?.id])
 
-  // CelesTrak fetch failed entirely
+  // Handle satellite selection
+  function handleSelectSatellite(sat) {
+    if (selectedSatellite?.id === sat.id) {
+      // Deselect if clicking same satellite
+      setSelectedSatellite(null)
+    } else {
+      setSelectedSatellite(sat)
+    }
+  }
+
+  // Error state
   if (error) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-void gap-4">
+      <div style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--bg-primary)',
+        gap: '12px',
+      }}>
         <div style={{
-          width: '24px',
-          height: '24px',
-          border: '1px solid var(--primary)',
-          transform: 'rotate(45deg)'
+          width: '40px',
+          height: '40px',
+          borderRadius: '50%',
+          background: 'var(--status-alert)',
+          opacity: 0.15,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }} />
         <p style={{
-          fontFamily: 'JetBrains Mono',
-          fontSize: '0.65rem',
-          letterSpacing: '0.2em',
-          color: 'var(--primary)'
+          fontSize: '14px',
+          fontWeight: 600,
+          color: 'var(--text-primary)',
         }}>
-          TELEMETRY LINK FAILURE
+          Connection failed
         </p>
         <p style={{
-          fontFamily: 'JetBrains Mono',
-          fontSize: '0.55rem',
-          letterSpacing: '0.1em',
-          color: 'var(--text-ghost)'
+          fontSize: '13px',
+          color: 'var(--text-tertiary)',
+          maxWidth: '300px',
+          textAlign: 'center',
+          lineHeight: 1.5,
         }}>
           {error}
         </p>
@@ -101,25 +129,61 @@ function CommandCenter() {
   }
 
   return (
-    <div className="w-full h-full flex bg-void overflow-hidden">
-      <Sidebar
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      style={{
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'var(--bg-primary)',
+      }}
+    >
+      {/* Top bar */}
+      <TopBar
+        satelliteCount={satellites.length}
+        onToggleList={() => setIsListOpen(prev => !prev)}
+        isListOpen={isListOpen}
+      />
+
+      {/* Globe — fullscreen behind everything */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 0,
+      }}>
+        <GlobeCanvas
+          satellites={satellites}
+          selectedSatellite={selectedSatellite}
+          onSelectSatellite={handleSelectSatellite}
+        />
+      </div>
+
+      {/* Satellite list drawer (left) */}
+      <SatelliteDrawer
         satellites={satellites}
         loading={loading}
         selectedSatellite={selectedSatellite}
-        onSelectSatellite={setSelectedSatellite}
+        onSelectSatellite={handleSelectSatellite}
+        isOpen={isListOpen}
+        onClose={() => setIsListOpen(false)}
       />
-      <GlobePanel
-        satellites={satellites}
-        selectedSatellite={selectedSatellite}
-        onSelectSatellite={setSelectedSatellite}
-      />
-      <DetailPanel
+
+      {/* Satellite detail drawer (right) */}
+      <SatelliteDetail
         satellite={selectedSatellite}
         missionIntel={selectedSatellite ? intelBySatellite[selectedSatellite.id] : null}
         intelLoading={intelLoading}
         intelError={intelError}
+        isOpen={!!selectedSatellite}
+        onClose={() => setSelectedSatellite(null)}
       />
-    </div>
+
+      {/* Orbit legend */}
+      <OrbitLegend />
+    </motion.div>
   )
 }
 

@@ -1,0 +1,151 @@
+import { useState, useEffect } from 'react'
+
+function TopBar({ satelliteCount, onToggleList, isListOpen }) {
+  const [time, setTime] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  const istTime = time.toLocaleTimeString('en-IN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  })
+
+  const istDate = time.toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+
+  return (
+    <header
+      className="glass"
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '52px',
+        zIndex: 50,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 20px',
+        borderBottom: '1px solid var(--border-subtle)',
+      }}
+    >
+      {/* Left — Branding */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button
+          onClick={onToggleList}
+          aria-label="Toggle satellite list"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '34px',
+            height: '34px',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-default)',
+            background: isListOpen ? 'var(--accent-muted)' : 'transparent',
+            color: isListOpen ? 'var(--accent)' : 'var(--text-secondary)',
+            cursor: 'pointer',
+            transition: 'all 150ms ease',
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+          <span style={{
+            fontSize: '15px',
+            fontWeight: 700,
+            letterSpacing: '-0.01em',
+            color: 'var(--text-primary)',
+          }}>
+            ISRO Satellites
+          </span>
+          <span style={{
+            fontSize: '12px',
+            fontWeight: 500,
+            color: 'var(--text-tertiary)',
+          }}>
+            {satelliteCount > 0 ? `${satelliteCount} tracked` : ''}
+          </span>
+        </div>
+      </div>
+
+      {/* Center — Clock + Live badge */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        position: 'absolute',
+        left: '50%',
+        transform: 'translateX(-50%)',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '4px 10px',
+          borderRadius: 'var(--radius-pill)',
+          background: 'rgba(107, 191, 138, 0.1)',
+          border: '1px solid rgba(107, 191, 138, 0.15)',
+        }}>
+          <div style={{
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            background: 'var(--status-nominal)',
+            animation: 'pulse-dot 2s ease-in-out infinite',
+          }} />
+          <span style={{
+            fontSize: '11px',
+            fontWeight: 600,
+            color: 'var(--status-nominal)',
+            letterSpacing: '0.02em',
+          }}>
+            Live
+          </span>
+        </div>
+
+        <span className="font-data" style={{
+          fontSize: '13px',
+          fontWeight: 500,
+          color: 'var(--text-primary)',
+          letterSpacing: '0.02em',
+        }}>
+          {istTime}
+        </span>
+
+        <span style={{
+          fontSize: '12px',
+          color: 'var(--text-tertiary)',
+        }}>
+          {istDate}
+        </span>
+      </div>
+
+      {/* Right — IST label */}
+      <div style={{
+        fontSize: '11px',
+        fontWeight: 500,
+        color: 'var(--text-tertiary)',
+        letterSpacing: '0.02em',
+      }}>
+        IST
+      </div>
+    </header>
+  )
+}
+
+export default TopBar

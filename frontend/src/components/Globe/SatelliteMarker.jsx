@@ -1,71 +1,124 @@
-import { useRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import { useGLTF, Html } from "@react-three/drei";
-import * as THREE from "three";
+import { useRef, useState, useMemo } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import { useGLTF, Html } from '@react-three/drei'
+import * as THREE from 'three'
 
 // Converts lat/lng/altitude to 3D cartesian coordinates
-// This is the core math that places satellites on the globe
 function latLngToVector3(lat, lng, radius) {
-  const phi = (90 - lat) * (Math.PI / 180); // polar angle from Y axis
-  const theta = (lng + 180) * (Math.PI / 180); // azimuthal angle
+  const phi = (90 - lat) * (Math.PI / 180)
+  const theta = (lng + 180) * (Math.PI / 180)
 
   return new THREE.Vector3(
     -radius * Math.sin(phi) * Math.cos(theta),
     radius * Math.cos(phi),
-    radius * Math.sin(phi) * Math.sin(theta),
-  );
+    radius * Math.sin(phi) * Math.sin(theta)
+  )
+}
+
+// Orbit type colors (muted)
+const ORBIT_DOT_COLORS = {
+  LEO: '#6B93D6',
+  GEO: '#D4915E',
+  SSO: '#6BBF8A',
 }
 
 function SatelliteMarker({ satellite, isSelected, onClick }) {
-  const markerRef = useRef();
-  const ringRef = useRef();
-  const { scene } = useGLTF("/assets/satellite.glb");
+  const dotRef = useRef()
+  const ringRef = useRef()
+  const modelRef = useRef()
+  const [isHovered, setIsHovered] = useState(false)
+  const { camera } = useThree()
 
-  const position = satellite.position;
-  if (!position) return null;
+  // Load the 3D model (only instantiated when needed)
+  const { scene } = useGLTF('/assets/satellite.glb')
 
-  // Earth radius = 1 unit, altitude normalized
-  // LEO satellites at ~500km = 1 + 500/6371 ≈ 1.078
-  const radius = 1 + position.alt / 6371;
-  const pos = latLngToVector3(position.lat, position.lng, radius);
+  const position = satellite.position
+  if (!position) return null
 
-  // Orbit color based on type
-  const colors = { LEO: "#00B4FF", GEO: "#FF6B00", SSO: "#00FF85" };
-  const color = isSelected
-    ? "#FF3D00"
-    : colors[satellite.orbitType] || "#ffffff";
+  const radius = 1 + position.alt / 6371
+  const pos = latLngToVector3(position.lat, position.lng, radius)
 
-  // Spin the selection ring
+  const dotColor = isSelected ? '#4F46E5' : ORBIT_DOT_COLORS[satellite.orbitType] || '#6B93D6'
+
+  // Calculate distance from camera to determine detail level
+  const cameraDistRef = useRef(10)
+
   useFrame((state, delta) => {
-    if (ringRef.current && isSelected) {
-      ringRef.current.rotation.z += delta * 0.8;
+    // Distance from camera to this marker
+    cameraDistRef.current = camera.position.distanceTo(pos)
+
+    // Pulsing animation for dots
+    if (dotRef.current && !isSelected) {
+      const pulse = 1 + Math.sin(state.clock.elapsedTime * 2 + satellite.id.length) * 0.15
+      dotRef.current.scale.setScalar(pulse)
     }
-  });
+
+    // Selection ring spin
+    if (ringRef.current && isSelected) {
+      ringRef.current.rotation.z += delta * 0.5
+    }
+
+    // Rotate 3D model when close and selected
+    if (modelRef.current && isSelected) {
+      modelRef.current.rotation.y += delta * 0.3
+    }
+  })
+
+  // Determine if we should show the 3D model (camera is close enough + selected)
+  const showModel = isSelected && cameraDistRef.current < 2.5
 
   return (
     <group
       position={pos}
       onClick={(e) => {
-        e.stopPropagation();
-        onClick(satellite);
+        e.stopPropagation()
+        onClick(satellite)
       }}
+      onPointerEnter={() => setIsHovered(true)}
+      onPointerLeave={() => setIsHovered(false)}
     >
-      {/* 3D Satellite Model */}
-      <primitive
-        ref={markerRef}
-        object={scene.clone()}
-        scale={[0.02, 0.02, 0.02]} // Scale down the model to fit
-        rotation={[-30, 5, 0]} // Adjust rotation if needed
-      />
+      {/* 3D Model — shown when selected and zoomed in */}
+      {isSelected && (
+        <primitive
+          ref={modelRef}
+          object={scene.clone()}
+          scale={[0.02, 0.02, 0.02]}
+          rotation={[-30, 5, 0]}
+        />
+      )}
 
-      {/* Selection ring — only visible when selected */}
+      {/* Dot marker — always visible, primary at overview zoom */}
+      {!isSelected && (
+        <mesh ref={dotRef}>
+          <sphereGeometry args={[0.012, 16, 16]} />
+          <meshBasicMaterial
+            color={dotColor}
+            transparent
+            opacity={0.9}
+          />
+        </mesh>
+      )}
+
+      {/* Glow around dot */}
+      {!isSelected && (
+        <mesh>
+          <sphereGeometry args={[0.02, 16, 16]} />
+          <meshBasicMaterial
+            color={dotColor}
+            transparent
+            opacity={isHovered ? 0.3 : 0.12}
+          />
+        </mesh>
+      )}
+
+      {/* Selection ring */}
       {isSelected && (
         <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.025, 0.028, 32]} />
+          <ringGeometry args={[0.03, 0.034, 32]} />
           <meshBasicMaterial
-            color="#FF3D00"
+            color="#4F46E5"
             transparent
-            opacity={0.8}
+            opacity={0.7}
             side={THREE.DoubleSide}
           />
         </mesh>
@@ -73,31 +126,37 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
 
       {/* Invisible hit area — larger click target */}
       <mesh visible={false}>
-        <sphereGeometry args={[0.1, 8, 8]} />
+        <sphereGeometry args={[0.08, 8, 8]} />
         <meshBasicMaterial />
       </mesh>
 
-      <Html
-        center={false}
-        position={[0.02, 0.02, 0]}
-        style={{ pointerEvents: "none" }}
-      >
-        <div
-          style={{
-            fontFamily: "JetBrains Mono",
-            fontSize: "12px",
-            letterSpacing: "0.1em",
-            color: isSelected ? "#FF3D00" : "rgba(255, 255, 255, 0.76)",
-            whiteSpace: "nowrap",
-            userSelect: "none",
-          }}
+      {/* Hover tooltip */}
+      {(isHovered || isSelected) && (
+        <Html
+          center={false}
+          position={[0.03, 0.03, 0]}
+          style={{ pointerEvents: 'none' }}
         >
-          {satellite.callsign}
-        </div>
-      </Html>
+          <div style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: isSelected ? '12px' : '11px',
+            fontWeight: isSelected ? 600 : 500,
+            color: isSelected ? '#4F46E5' : 'rgba(255, 255, 255, 0.8)',
+            whiteSpace: 'nowrap',
+            userSelect: 'none',
+            padding: '3px 8px',
+            borderRadius: '6px',
+            background: isSelected ? 'rgba(79, 70, 229, 0.1)' : 'rgba(26, 26, 30, 0.75)',
+            backdropFilter: 'blur(4px)',
+            border: `1px solid ${isSelected ? 'rgba(79, 70, 229, 0.2)' : 'rgba(255, 255, 255, 0.06)'}`,
+          }}>
+            {satellite.name}
+          </div>
+        </Html>
+      )}
     </group>
-  );
+  )
 }
 
-export { latLngToVector3 };
-export default SatelliteMarker;
+export { latLngToVector3 }
+export default SatelliteMarker

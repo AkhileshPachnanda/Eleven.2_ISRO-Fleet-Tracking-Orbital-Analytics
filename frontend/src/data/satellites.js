@@ -7,7 +7,7 @@ export const SATELLITES = [
     orbitType: "SSO",
     status: "NOMINAL",
     mission: "Earth Observation",
-    launched: "27 NOV 2019",
+    launched: "27 Nov 2019",
     mass: 1625,
     description:
       "High-resolution civilian earth observation satellite. Capable of 0.25m panchromatic imaging. Primary mission: urban planning, infrastructure monitoring, disaster management.",
@@ -21,7 +21,7 @@ export const SATELLITES = [
     orbitType: "SSO",
     status: "NOMINAL",
     mission: "Earth Observation",
-    launched: "07 DEC 2016",
+    launched: "07 Dec 2016",
     mass: 1235,
     description:
       "Continuation of ResourceSat series for natural resource management. Carries LISS-3, LISS-4, and AWiFS sensors for agriculture, forestry, and water body monitoring.",
@@ -35,7 +35,7 @@ export const SATELLITES = [
     orbitType: "SSO",
     status: "NOMINAL",
     mission: "Ocean Observation",
-    launched: "26 NOV 2022",
+    launched: "26 Nov 2022",
     mass: 1100,
     description:
       "Ocean colour monitor and sea surface temperature radiometer. Tracks phytoplankton, chlorophyll concentration, and ocean circulation patterns across Indian Ocean.",
@@ -49,7 +49,7 @@ export const SATELLITES = [
     orbitType: "SSO",
     status: "NOMINAL",
     mission: "Radar Imaging",
-    launched: "11 DEC 2019",
+    launched: "11 Dec 2019",
     mass: 628,
     description:
       "Synthetic Aperture Radar satellite for all-weather, day-night surveillance. Resolution up to 0.35m. Critical for border monitoring, flood mapping, and disaster response.",
@@ -63,7 +63,7 @@ export const SATELLITES = [
     orbitType: "GEO",
     status: "NOMINAL",
     mission: "Communications",
-    launched: "17 JAN 2020",
+    launched: "17 Jan 2020",
     mass: 3357,
     description:
       "C-band and Ku-band communication satellite. Provides DTH television, VSAT, and digital connectivity across India and surrounding regions. Positioned at 83°E.",
@@ -77,7 +77,7 @@ export const SATELLITES = [
     orbitType: "GEO",
     status: "NOMINAL",
     mission: "Communications",
-    launched: "05 JUN 2017",
+    launched: "05 Jun 2017",
     mass: 3136,
     description:
       "High throughput communication satellite using Ka and Ku bands. First Indian satellite to use electric propulsion for orbit raising.",
@@ -91,7 +91,7 @@ export const SATELLITES = [
     orbitType: "GEO",
     status: "NOMINAL",
     mission: "Navigation",
-    launched: "12 APR 2018",
+    launched: "12 Apr 2018",
     mass: 1425,
     description:
       "Part of India's indigenous navigation constellation (NavIC). Provides position accuracy of 20m over India and 1500km surrounding region.",
@@ -105,7 +105,7 @@ export const SATELLITES = [
     orbitType: "LEO",
     status: "NOMINAL",
     mission: "Astronomy",
-    launched: "28 SEP 2015",
+    launched: "28 Sep 2015",
     mass: 1515,
     description:
       "India's first dedicated multi-wavelength space observatory. Simultaneously observes in UV, optical, low and high energy X-ray wavebands.",
@@ -119,7 +119,7 @@ export const SATELLITES = [
     orbitType: "LEO",
     status: "NOMINAL",
     mission: "Lunar Science",
-    launched: "22 JUL 2019",
+    launched: "22 Jul 2019",
     mass: 2379,
     description:
       "Lunar orbiter conducting remote sensing of the Moon's surface. Orbiter continues to function nominally carrying 8 scientific instruments.",
@@ -132,7 +132,7 @@ export const SATELLITES = [
     orbitType: "LEO",
     status: "NOMINAL",
     mission: "Solar Science",
-    launched: "02 SEP 2023",
+    launched: "02 Sep 2023",
     mass: 1475,
     description:
       "India's first solar observatory positioned at Sun-Earth Lagrange point L1. Continuously observing solar corona, solar wind, and space weather.",
@@ -146,7 +146,7 @@ export const SATELLITES = [
     orbitType: "GEO",
     status: "NOMINAL",
     mission: "Communications",
-    launched: "23 JUN 2022",
+    launched: "23 Jun 2022",
     mass: 4180,
     description:
       "High throughput Ku-band satellite built for Tata Play DTH services. Largest communication satellite built by ISRO.",
@@ -160,7 +160,7 @@ export const SATELLITES = [
     orbitType: "SSO",
     status: "NOMINAL",
     mission: "Radar Imaging",
-    launched: "14 FEB 2022",
+    launched: "14 Feb 2022",
     mass: 1710,
     description:
       "C-band Synthetic Aperture Radar for all-weather agriculture monitoring, flood mapping, and forest and soil moisture assessment.",
@@ -169,13 +169,13 @@ export const SATELLITES = [
 ];
 
 export const STATUS_COLORS = {
-  NOMINAL: "#00FF85",
-  CAUTION: "#FFB300",
-  ALERT: "#FF3D00",
+  NOMINAL: "#6BBF8A",
+  CAUTION: "#D4A55E",
+  ALERT: "#D66B6B",
 };
 
 export const ORBIT_COLORS = {
-  LEO: "#00B4FF",
-  GEO: "#FF6B00",
-  SSO: "#00FF85",
+  LEO: "#6B93D6",
+  GEO: "#D4915E",
+  SSO: "#6BBF8A",
 };

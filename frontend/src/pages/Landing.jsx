@@ -1,91 +1,197 @@
-import { useState, useEffect, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import LandingGlobe from '../components/Globe/LandingGlobe'
 
 function Landing() {
   const navigate = useNavigate()
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 400)
-    return () => clearTimeout(t)
-  }, [])
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-void">
-
-      {/* Globe layer */}
-      <div className="absolute inset-0 z-0">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.6 }}
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        overflow: 'hidden',
+        background: 'var(--bg-primary)',
+      }}
+    >
+      {/* Globe — background, slightly offset downward */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 0,
+      }}>
         <LandingGlobe />
       </div>
 
-      {/* Frosted overlay */}
-      <div
-        className="absolute inset-0 z-10"
-        style={{
-          backdropFilter: 'blur(8px)',
-          backgroundColor: 'rgba(8,8,8,0.55)'
-        }}
-      />
+      {/* Gradient overlay — helps text readability */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 5,
+        background: `
+          radial-gradient(ellipse at center 40%, transparent 30%, var(--bg-primary) 75%),
+          linear-gradient(to bottom, var(--bg-primary) 0%, transparent 20%, transparent 70%, var(--bg-primary) 100%)
+        `,
+        pointerEvents: 'none',
+      }} />
 
-      {/* Content */}
-      <div
-        className="absolute inset-0 z-20 flex flex-col items-center justify-center"
-        style={{
-          opacity: visible ? 1 : 0,
-          transition: 'opacity 800ms ease-out'
-        }}
-      >
-        {/* Top line */}
-        <div className="w-px bg-primary opacity-60 mb-8" style={{ height: '48px' }} />
+      {/* Top nav */}
+      <nav style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 20,
+        padding: '20px 32px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+      }}>
+        <span style={{
+          fontSize: '15px',
+          fontWeight: 700,
+          color: 'var(--text-primary)',
+          letterSpacing: '-0.01em',
+        }}>
+          ISRO
+        </span>
+        <div style={{
+          display: 'flex',
+          gap: '24px',
+          alignItems: 'center',
+        }}>
+          <a
+            href="https://www.isro.gov.in"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: '13px',
+              fontWeight: 500,
+              color: 'var(--text-secondary)',
+              textDecoration: 'none',
+              transition: 'color 150ms ease',
+            }}
+            onMouseEnter={e => e.target.style.color = 'var(--text-primary)'}
+            onMouseLeave={e => e.target.style.color = 'var(--text-secondary)'}
+          >
+            About ISRO
+          </a>
+        </div>
+      </nav>
 
-        <p
-          className="text-dim mb-4 uppercase tracking-widest"
-          style={{ fontFamily: 'JetBrains Mono', fontSize: '0.65rem', letterSpacing: '0.3em' }}
-        >
-          INDIAN SPACE RESEARCH ORGANISATION
-        </p>
-
-        <h1
-          className="text-center font-bold text-primary-foreground"
+      {/* Hero content */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        zIndex: 10,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        pointerEvents: 'none',
+      }}>
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
           style={{
-            fontFamily: 'Space Grotesk',
-            fontSize: 'clamp(2rem, 5vw, 4rem)',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: 'var(--accent)',
             letterSpacing: '0.08em',
-            lineHeight: 1.1
+            marginBottom: '12px',
+            textTransform: 'uppercase',
           }}
         >
-          MISSION CONTROL
-          <br />
-          <span className="text-primary">INDIA</span>
-        </h1>
+          Indian Space Research Organisation
+        </motion.p>
 
-        <p
-          className="text-dim mt-4"
-          style={{ fontFamily: 'JetBrains Mono', fontSize: '0.65rem', letterSpacing: '0.2em' }}
+        <motion.h1
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.5 }}
+          style={{
+            fontSize: 'clamp(32px, 5vw, 56px)',
+            fontWeight: 700,
+            color: 'var(--text-primary)',
+            lineHeight: 1.1,
+            letterSpacing: '-0.025em',
+            marginBottom: '16px',
+          }}
         >
-          SATELLITE OPERATIONS // REAL-TIME TELEMETRY
-        </p>
+          India's eyes<br />in orbit
+        </motion.h1>
 
-        {/* Bottom line */}
-        <div className="w-px bg-primary opacity-60 mt-8" style={{ height: '48px' }} />
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+          style={{
+            fontSize: '16px',
+            fontWeight: 400,
+            color: 'var(--text-secondary)',
+            maxWidth: '400px',
+            lineHeight: 1.6,
+            marginBottom: '32px',
+          }}
+        >
+          Track every ISRO satellite in real-time.
+          Live orbital positions, telemetry, and mission data.
+        </motion.p>
 
-        <button
+        <motion.button
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.75, duration: 0.4 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
           onClick={() => navigate('/control')}
-          className="mt-10 px-8 py-3 border border-primary text-primary bg-transparent cursor-pointer uppercase tracking-widest transition-all duration-200 hover:bg-primary/10"
-          style={{ fontFamily: 'Space Grotesk', fontSize: '0.7rem', letterSpacing: '0.2em' }}
+          style={{
+            padding: '12px 32px',
+            fontSize: '14px',
+            fontWeight: 600,
+            fontFamily: 'inherit',
+            background: 'var(--accent)',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: 'var(--radius-pill)',
+            cursor: 'pointer',
+            pointerEvents: 'auto',
+            transition: 'background 150ms ease',
+            letterSpacing: '0.01em',
+          }}
+          onMouseEnter={e => e.target.style.background = 'var(--accent-hover)'}
+          onMouseLeave={e => e.target.style.background = 'var(--accent)'}
         >
-          [ ENTER COMMAND CENTER ]
-        </button>
-
-        <p
-          className="absolute bottom-8 text-ghost"
-          style={{ fontFamily: 'JetBrains Mono', fontSize: '0.6rem', letterSpacing: '0.15em' }}
-        >
-          {new Date().toISOString().split('T')[0]} // SYSTEM NOMINAL
-        </p>
+          Explore →
+        </motion.button>
       </div>
-    </div>
+
+      {/* Bottom credit */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2, duration: 0.5 }}
+        style={{
+          position: 'absolute',
+          bottom: '24px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10,
+          fontSize: '11px',
+          color: 'var(--text-tertiary)',
+          letterSpacing: '0.02em',
+        }}
+      >
+        Data sourced from CelesTrak • Positions updated live
+      </motion.p>
+    </motion.div>
   )
 }
 
