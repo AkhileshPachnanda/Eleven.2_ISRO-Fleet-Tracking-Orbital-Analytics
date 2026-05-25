@@ -162,16 +162,6 @@ function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, is
               <DataRow label="Callsign" value={satellite.callsign} />
             </Section>
 
-            {/* Overview */}
-            <Section title="Overview" delay={0.1}>
-              <p style={{
-                fontSize: '13px',
-                lineHeight: 1.7,
-                color: 'var(--text-secondary)',
-              }}>
-                {satellite.description}
-              </p>
-            </Section>
 
             {/* AI Mission Summary */}
             <Section title="Mission summary" delay={0.15}>
