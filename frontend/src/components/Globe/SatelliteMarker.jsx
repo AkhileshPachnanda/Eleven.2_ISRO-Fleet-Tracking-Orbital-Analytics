@@ -6,12 +6,12 @@ import * as THREE from 'three'
 // Converts lat/lng/altitude to 3D cartesian coordinates
 function latLngToVector3(lat, lng, radius) {
   const phi = (90 - lat) * (Math.PI / 180)
-  const theta = (lng + 180) * (Math.PI / 180)
+  const theta = lng * (Math.PI / 180)
 
   return new THREE.Vector3(
-    -radius * Math.sin(phi) * Math.cos(theta),
+    -radius * Math.sin(phi) * Math.sin(theta),
     radius * Math.cos(phi),
-    radius * Math.sin(phi) * Math.sin(theta)
+    -radius * Math.sin(phi) * Math.cos(theta)
   )
 }
 

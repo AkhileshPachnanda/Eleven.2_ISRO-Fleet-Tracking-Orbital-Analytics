@@ -11,9 +11,9 @@ function GlobeView({ isInteracting }) {
   const dayTexture = useLoader(TextureLoader, 'src/assets/8k_earth_daymap.jpg')
 
   // Earth texture alignment correction
-  // The texture's prime meridian (0 lng) is typically at -Z
-  // latLngToVector3 puts 0 lng at +X. We rotate by -90 deg (-PI/2) to align them.
-  const earthRotation = [0, -Math.PI / 2, 0]
+  // We use a standardized latLngToVector3 that natively aligns 0 lng to -Z (U=0.5 on the texture).
+  // No artificial rotation is needed.
+  const earthRotation = [0, 0, 0]
 
   return (
     <group>
