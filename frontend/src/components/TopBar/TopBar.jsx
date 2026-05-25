@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 
 function TopBar({ satelliteCount, onToggleList, isListOpen, simulatedTime, isLive }) {
   const istTime = simulatedTime.toLocaleTimeString('en-IN', {
@@ -14,6 +15,8 @@ function TopBar({ satelliteCount, onToggleList, isListOpen, simulatedTime, isLiv
     year: 'numeric',
   })
 
+  const isMobile = useMediaQuery('(max-width: 768px)')
+
   return (
     <header
       className="glass"
@@ -27,7 +30,7 @@ function TopBar({ satelliteCount, onToggleList, isListOpen, simulatedTime, isLiv
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 20px',
+        padding: isMobile ? '0 12px' : '0 20px',
         borderBottom: '1px solid var(--border-subtle)',
       }}
     >
@@ -66,13 +69,15 @@ function TopBar({ satelliteCount, onToggleList, isListOpen, simulatedTime, isLiv
           }}>
             ISRO Satellites
           </span>
-          <span style={{
-            fontSize: '12px',
-            fontWeight: 500,
-            color: 'var(--text-tertiary)',
-          }}>
-            {satelliteCount > 0 ? `${satelliteCount} tracked` : ''}
-          </span>
+          {!isMobile && (
+            <span style={{
+              fontSize: '12px',
+              fontWeight: 500,
+              color: 'var(--text-tertiary)',
+            }}>
+              {satelliteCount > 0 ? `${satelliteCount} tracked` : ''}
+            </span>
+          )}
         </div>
       </div>
 
@@ -81,9 +86,9 @@ function TopBar({ satelliteCount, onToggleList, isListOpen, simulatedTime, isLiv
         display: 'flex',
         alignItems: 'center',
         gap: '10px',
-        position: 'absolute',
-        left: '50%',
-        transform: 'translateX(-50%)',
+        position: isMobile ? 'relative' : 'absolute',
+        left: isMobile ? 'auto' : '50%',
+        transform: isMobile ? 'none' : 'translateX(-50%)',
       }}>
         <div style={{
           display: 'flex',
@@ -120,23 +125,27 @@ function TopBar({ satelliteCount, onToggleList, isListOpen, simulatedTime, isLiv
           {istTime}
         </span>
 
-        <span style={{
-          fontSize: '12px',
-          color: 'var(--text-tertiary)',
-        }}>
-          {istDate}
-        </span>
+        {!isMobile && (
+          <span style={{
+            fontSize: '12px',
+            color: 'var(--text-tertiary)',
+          }}>
+            {istDate}
+          </span>
+        )}
       </div>
 
-      {/* Right — IST label */}
-      <div style={{
-        fontSize: '11px',
-        fontWeight: 500,
-        color: 'var(--text-tertiary)',
-        letterSpacing: '0.02em',
-      }}>
-        IST
-      </div>
+      {/* Right — IST label (hidden on mobile) */}
+      {!isMobile && (
+        <div style={{
+          fontSize: '11px',
+          fontWeight: 500,
+          color: 'var(--text-tertiary)',
+          letterSpacing: '0.02em',
+        }}>
+          IST
+        </div>
+      )}
     </header>
   )
 }

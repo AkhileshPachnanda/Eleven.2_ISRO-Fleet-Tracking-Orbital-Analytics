@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { STATUS_COLORS, ORBIT_COLORS } from '../../data/satellites'
 
 const FILTERS = ['All', 'LEO', 'GEO', 'SSO']
@@ -7,6 +8,7 @@ const FILTERS = ['All', 'LEO', 'GEO', 'SSO']
 function SatelliteDrawer({ satellites = [], loading, selectedSatellite, onSelectSatellite, isOpen, onClose }) {
   const [filter, setFilter] = useState('All')
   const [search, setSearch] = useState('')
+  const isMobile = useMediaQuery('(max-width: 768px)')
 
   const filtered = useMemo(() => {
     let result = satellites
@@ -28,20 +30,30 @@ function SatelliteDrawer({ satellites = [], loading, selectedSatellite, onSelect
     <AnimatePresence>
       {isOpen && (
         <motion.aside
-          initial={{ x: -340 }}
-          animate={{ x: 0 }}
-          exit={{ x: -340 }}
+          initial={isMobile ? { y: '100%' } : { x: -340 }}
+          animate={isMobile ? { y: 0 } : { x: 0 }}
+          exit={isMobile ? { y: '100%' } : { x: -340 }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           style={{
             position: 'absolute',
-            top: '60px',
-            left: '8px',
-            bottom: '8px',
-            width: '320px',
             zIndex: 40,
             background: 'var(--bg-secondary)',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-subtle)',
+            ...(isMobile ? {
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '65vh',
+              width: '100%',
+              borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+              borderTop: '1px solid var(--border-subtle)',
+            } : {
+              top: '60px',
+              left: '8px',
+              bottom: '8px',
+              width: '320px',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border-subtle)',
+            }),
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',

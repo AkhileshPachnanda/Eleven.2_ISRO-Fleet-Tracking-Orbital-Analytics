@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 
 // Range: +/- 2 days in milliseconds (96 hours total)
 const MAX_OFFSET_MS = 1 * 24 * 60 * 60 * 1000
@@ -7,6 +8,7 @@ function TimeScrubber({ timeOffset, setTimeOffset }) {
   const [isScrubbing, setIsScrubbing] = useState(false)
   const [localOffset, setLocalOffset] = useState(timeOffset)
   const trackRef = useRef(null)
+  const isMobile = useMediaQuery('(max-width: 768px)')
 
   // Sync local state when not actively scrubbing
   useEffect(() => {
@@ -130,15 +132,15 @@ function TimeScrubber({ timeOffset, setTimeOffset }) {
   return (
     <div style={{
       position: 'absolute',
-      bottom: '40px',
+      bottom: isMobile ? '20px' : '40px',
       left: '50%',
       transform: 'translateX(-50%)',
       zIndex: 40,
-      width: '90%',
+      width: isMobile ? '95%' : '90%',
       maxWidth: '600px', // Adjusted size as requested
       display: 'flex',
       flexDirection: 'column',
-      gap: '12px',
+      gap: isMobile ? '8px' : '12px',
     }}>
       
       {/* Header and Reset Button */}
@@ -152,7 +154,7 @@ function TimeScrubber({ timeOffset, setTimeOffset }) {
         <div style={{ 
           color: 'rgba(255,255,255,0.7)', 
           fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif", 
-          fontSize: '11px', 
+          fontSize: isMobile ? '10px' : '11px', 
           fontWeight: 700,
           letterSpacing: '0.1em'
         }}>
@@ -196,8 +198,8 @@ function TimeScrubber({ timeOffset, setTimeOffset }) {
         fontWeight: 600,
         letterSpacing: '0.1em'
       }}>
-        <span>{formatEdgeDate(edgeLeft)}</span>
-        <span>{formatEdgeDate(edgeRight)}</span>
+        <span style={{ fontSize: isMobile ? '10px' : '11px' }}>{formatEdgeDate(edgeLeft)}</span>
+        <span style={{ fontSize: isMobile ? '10px' : '11px' }}>{formatEdgeDate(edgeRight)}</span>
       </div>
 
       <div style={{ position: 'relative', height: '40px', display: 'flex', alignItems: 'center' }}>

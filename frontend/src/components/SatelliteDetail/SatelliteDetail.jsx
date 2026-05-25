@@ -1,25 +1,39 @@
 import { motion, AnimatePresence } from 'framer-motion'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { STATUS_COLORS, ORBIT_COLORS } from '../../data/satellites'
 
 function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, isOpen, onClose }) {
+  const isMobile = useMediaQuery('(max-width: 768px)')
+
   return (
     <AnimatePresence>
       {isOpen && satellite && (
         <motion.aside
-          initial={{ x: 380 }}
-          animate={{ x: 0 }}
-          exit={{ x: 380 }}
+          initial={isMobile ? { y: '100%' } : { x: 380 }}
+          animate={isMobile ? { y: 0 } : { x: 0 }}
+          exit={isMobile ? { y: '100%' } : { x: 380 }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           style={{
             position: 'absolute',
-            top: '60px',
-            right: '8px',
-            bottom: '8px',
-            width: '360px',
-            zIndex: 40,
             background: 'var(--bg-secondary)',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-subtle)',
+            ...(isMobile ? {
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '45vh', // Reduced from 75vh to show the globe zoom
+              width: '100%',
+              borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+              borderTop: '1px solid var(--border-subtle)',
+              zIndex: 50, // Ensure it sits above the satellite list on mobile
+            } : {
+              top: '60px',
+              right: '8px',
+              bottom: '8px',
+              width: '360px',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border-subtle)',
+              zIndex: 40,
+            }),
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
@@ -30,7 +44,22 @@ function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, is
           <div style={{
             padding: '16px',
             borderBottom: '1px solid var(--border-subtle)',
+            display: 'flex',
+            flexDirection: 'column',
+            position: 'relative',
           }}>
+            {/* Mobile Drag Handle Indicator */}
+            {isMobile && (
+              <div style={{
+                width: '36px',
+                height: '4px',
+                borderRadius: '2px',
+                background: 'var(--border-default)',
+                alignSelf: 'center',
+                marginBottom: '12px',
+              }} />
+            )}
+
             <div style={{
               display: 'flex',
               alignItems: 'flex-start',
