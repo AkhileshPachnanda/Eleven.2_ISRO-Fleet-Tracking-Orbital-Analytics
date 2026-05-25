@@ -1,12 +1,11 @@
 import * as satellite from 'satellite.js'
 
-export function getCurrentPosition(tle) {
+export function getCurrentPosition(tle, time = new Date()) {
   try {
     const [line1, line2] = tle
     const satrec = satellite.twoline2satrec(line1, line2)
 
-    const now = new Date()
-    const positionAndVelocity = satellite.propagate(satrec, now)
+    const positionAndVelocity = satellite.propagate(satrec, time)
 
     // satellite.js returns null OR an object with false position
     // when TLE is invalid or satellite has decayed
@@ -17,7 +16,7 @@ export function getCurrentPosition(tle) {
 
     if (!positionEci || typeof positionEci === 'boolean') return null
 
-    const gmst = satellite.gstime(now)
+    const gmst = satellite.gstime(time)
     const geodetic = satellite.eciToGeodetic(positionEci, gmst)
 
     const velocity = Math.sqrt(
@@ -38,15 +37,14 @@ export function getCurrentPosition(tle) {
   }
 }
 
-export function getGroundTrack(tle, minutesAhead = 90, stepMinutes = 2) {
+export function getGroundTrack(tle, minutesAhead = 90, stepMinutes = 1, baseTime = new Date()) {
   try {
     const [line1, line2] = tle
     const satrec = satellite.twoline2satrec(line1, line2)
-    const now = new Date()
     const points = []
 
     for (let i = 0; i <= minutesAhead; i += stepMinutes) {
-      const time = new Date(now.getTime() + i * 60 * 1000)
+      const time = new Date(baseTime.getTime() + i * 60 * 1000)
       const pv = satellite.propagate(satrec, time)
 
       if (!pv || !pv.position || typeof pv.position === 'boolean') continue
@@ -57,7 +55,7 @@ export function getGroundTrack(tle, minutesAhead = 90, stepMinutes = 2) {
       points.push([
         satellite.degreesLat(geo.latitude),
         satellite.degreesLong(geo.longitude),
-        geo.height / 6371
+        geo.height / 6378
       ])
     }
 

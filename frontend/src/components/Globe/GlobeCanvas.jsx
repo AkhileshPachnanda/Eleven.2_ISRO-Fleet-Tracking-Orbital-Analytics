@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, Suspense } from 'react'
+import { useRef, useState, useEffect, Suspense, useCallback } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import * as THREE from 'three'
@@ -8,7 +8,7 @@ import GroundTrack from './GroundTrack'
 import { latLngToVector3 } from './SatelliteMarker'
 
 /* ── Camera animator — smoothly moves camera to selected satellite ── */
-function CameraAnimator({ selectedSatellite, controlsRef }) {
+function CameraAnimator({ selectedSatellite, controlsRef, onAnimationStateChange }) {
   const { camera } = useThree()
   const targetRef = useRef(null)
   const isAnimatingRef = useRef(false)
@@ -23,16 +23,18 @@ function CameraAnimator({ selectedSatellite, controlsRef }) {
         radius
       )
 
-      // Position camera along the vector from center to satellite, but pulled back
+      // Position camera along the vector from center to satellite, pulled back
       const direction = satPos.clone().normalize()
       const cameraDistance = radius + 0.6
       targetRef.current = direction.multiplyScalar(cameraDistance)
       isAnimatingRef.current = true
+      onAnimationStateChange(true) // Lock controls during animation
       prevSelectedRef.current = selectedSatellite.id
     } else if (!selectedSatellite && prevSelectedRef.current) {
       // Zoom back out when deselected
       targetRef.current = new THREE.Vector3(0, 0, 3.5)
       isAnimatingRef.current = true
+      onAnimationStateChange(true) // Lock controls during animation
       prevSelectedRef.current = null
     }
   }, [selectedSatellite?.id, selectedSatellite?.position?.lat, selectedSatellite?.position?.lng])
@@ -50,15 +52,53 @@ function CameraAnimator({ selectedSatellite, controlsRef }) {
 
     if (distance < 0.01) {
       isAnimatingRef.current = false
+      onAnimationStateChange(false) // Unlock controls after animation finishes
     }
   })
 
   return null
 }
 
-function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite }) {
+/* ── Real-time Sun ── */
+function SunLight({ timeOffset = 0 }) {
+  const sunRef = useRef()
+
+  useFrame(() => {
+    if (!sunRef.current) return
+    const now = new Date(Date.now() + timeOffset)
+    const start = new Date(now.getFullYear(), 0, 0)
+    const diff = now - start
+    const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24))
+    const hour = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600
+
+    // Declination (latitude)
+    const lat = 23.45 * Math.sin((2 * Math.PI / 365) * (dayOfYear - 81))
+    
+    // Subsolar longitude
+    let lng = (12 - hour) * 15
+    if (lng > 180) lng -= 360
+    if (lng < -180) lng += 360
+
+    // Position sun far away
+    const pos = latLngToVector3(lat, lng, 100)
+    sunRef.current.position.copy(pos)
+  })
+
+  return <directionalLight ref={sunRef} intensity={2.2} color="#ffffff" />
+}
+
+function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite, timeOffset = 0 }) {
   const [isInteracting, setIsInteracting] = useState(false)
+  const [isCameraAnimating, setIsCameraAnimating] = useState(false)
   const controlsRef = useRef()
+
+  const handleAnimationStateChange = useCallback((animating) => {
+    setIsCameraAnimating(animating)
+    // Disable/enable orbit controls based on animation state
+    if (controlsRef.current) {
+      controlsRef.current.enabled = !animating
+    }
+  }, [])
 
   return (
     <div
@@ -81,15 +121,15 @@ function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite }) 
       >
         {/* Lighting */}
         <ambientLight intensity={0.25} />
-        <directionalLight position={[5, 3, 5]} intensity={2.2} color="#ffffff" />
+        <SunLight timeOffset={timeOffset} />
 
-        {/* Subtle stars — premium feel */}
+        {/* Subtle, premium stars — visible but not overpowering */}
         <Stars
-          radius={200}
-          depth={80}
-          count={1500}
-          factor={3}
-          saturation={0}
+          radius={100}
+          depth={60}
+          count={3000}
+          factor={4}
+          saturation={0.1}
           fade
         />
 
@@ -108,16 +148,17 @@ function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite }) 
               />
             ))}
 
-          {selectedSatellite && <GroundTrack satellite={selectedSatellite} />}
+          {selectedSatellite && <GroundTrack satellite={selectedSatellite} timeOffset={timeOffset} />}
         </Suspense>
 
         {/* Camera animator for smooth zoom on selection */}
         <CameraAnimator
           selectedSatellite={selectedSatellite}
           controlsRef={controlsRef}
+          onAnimationStateChange={handleAnimationStateChange}
         />
 
-        {/* Controls */}
+        {/* Controls — always enabled, only disabled during camera animation */}
         <OrbitControls
           ref={controlsRef}
           enablePan={false}
@@ -125,8 +166,9 @@ function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite }) 
           maxDistance={50}
           rotateSpeed={0.3}
           zoomSpeed={0.8}
-          autoRotate={!isInteracting && !selectedSatellite}
+          autoRotate={false}
           autoRotateSpeed={0.15}
+          enabled={!isCameraAnimating}
         />
       </Canvas>
     </div>

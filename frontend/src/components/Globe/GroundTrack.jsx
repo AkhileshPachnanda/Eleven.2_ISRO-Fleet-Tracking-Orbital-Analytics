@@ -3,11 +3,12 @@ import { CatmullRomCurve3, BufferGeometry } from 'three'
 import { latLngToVector3 } from './SatelliteMarker'
 import { getGroundTrack } from '../../lib/propogator'
 
-function GroundTrack({ satellite }) {
+function GroundTrack({ satellite, timeOffset = 0 }) {
   const points = useMemo(() => {
     if (!satellite?.tle) return []
 
-    const track = getGroundTrack(satellite.tle, 350, 2)
+    const baseTime = new Date(Date.now() + timeOffset)
+    const track = getGroundTrack(satellite.tle, 350, 1, baseTime)
     if (track.length < 2) return []
 
     return track.map(([lat, lng, alt]) =>
@@ -18,7 +19,7 @@ function GroundTrack({ satellite }) {
   if (points.length < 2) return null
 
   const curve = new CatmullRomCurve3(points)
-  const curvePoints = curve.getPoints(100)
+  const curvePoints = curve.getPoints(1000)
   const geometry = new BufferGeometry().setFromPoints(curvePoints)
 
   return (
@@ -26,7 +27,7 @@ function GroundTrack({ satellite }) {
       <lineBasicMaterial
         color="#4F46E5"
         transparent
-        opacity={0.35}
+        opacity={0.5}
       />
     </line>
   )

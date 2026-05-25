@@ -5,6 +5,7 @@ import GlobeCanvas from '../components/Globe/GlobeCanvas'
 import SatelliteDrawer from '../components/SatelliteDrawer/SatelliteDrawer'
 import SatelliteDetail from '../components/SatelliteDetail/SatelliteDetail'
 import OrbitLegend from '../components/UI/OrbitLegend'
+import TimeScrubber from '../components/UI/TimeScrubber'
 import { useSatellites } from '../hooks/useSatellites'
 import { fetchMissionIntel } from '../lib/api'
 
@@ -14,8 +15,19 @@ function CommandCenter() {
   const [intelBySatellite, setIntelBySatellite] = useState({})
   const [intelLoading, setIntelLoading] = useState(false)
   const [intelError, setIntelError] = useState(null)
+  const [timeOffset, setTimeOffset] = useState(0)
   const intelCacheRef = useRef({})
-  const { satellites, loading, error } = useSatellites()
+  const { satellites, loading, error } = useSatellites(timeOffset)
+  
+  // Real-time tick to keep simulatedTime advancing
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+  
+  const simulatedTime = new Date(now + timeOffset)
+  const isLive = Math.abs(timeOffset) < 1000
 
   // Fetch mission intel when satellite selected
   useEffect(() => {
@@ -146,6 +158,8 @@ function CommandCenter() {
         satelliteCount={satellites.length}
         onToggleList={() => setIsListOpen(prev => !prev)}
         isListOpen={isListOpen}
+        simulatedTime={simulatedTime}
+        isLive={isLive}
       />
 
       {/* Globe — fullscreen behind everything */}
@@ -158,6 +172,7 @@ function CommandCenter() {
           satellites={satellites}
           selectedSatellite={selectedSatellite}
           onSelectSatellite={handleSelectSatellite}
+          timeOffset={timeOffset}
         />
       </div>
 
@@ -183,6 +198,12 @@ function CommandCenter() {
 
       {/* Orbit legend */}
       <OrbitLegend />
+
+      {/* Time Scrubber */}
+      <TimeScrubber
+        timeOffset={timeOffset}
+        setTimeOffset={setTimeOffset}
+      />
     </motion.div>
   )
 }

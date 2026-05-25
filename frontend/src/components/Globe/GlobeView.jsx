@@ -10,18 +10,15 @@ function GlobeView({ isInteracting }) {
 
   const dayTexture = useLoader(TextureLoader, 'src/assets/8k_earth_daymap.jpg')
 
-  useFrame((state, delta) => {
-    if (!earthRef.current || isInteracting) return
-    earthRef.current.rotation.y += delta * 0.05
-    if (atmosphereRef.current) {
-      atmosphereRef.current.rotation.y += delta * 0.05
-    }
-  })
+  // Earth texture alignment correction
+  // The texture's prime meridian (0 lng) is typically at -Z
+  // latLngToVector3 puts 0 lng at +X. We rotate by -90 deg (-PI/2) to align them.
+  const earthRotation = [0, -Math.PI / 2, 0]
 
   return (
     <group>
       {/* Earth sphere */}
-      <mesh ref={earthRef}>
+      <mesh ref={earthRef} rotation={earthRotation}>
         <sphereGeometry args={[1, 64, 64]} />
         <meshPhongMaterial
           map={dayTexture}
@@ -29,7 +26,7 @@ function GlobeView({ isInteracting }) {
       </mesh>
 
       {/* Atmospheric glow — subtle, non-sci-fi */}
-      <mesh ref={atmosphereRef}>
+      <mesh ref={atmosphereRef} rotation={earthRotation}>
         <sphereGeometry args={[1.03, 64, 64]} />
         <meshPhongMaterial
           color={new THREE.Color(0x4F6DB5)}

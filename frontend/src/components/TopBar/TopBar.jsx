@@ -1,21 +1,14 @@
 import { useState, useEffect } from 'react'
 
-function TopBar({ satelliteCount, onToggleList, isListOpen }) {
-  const [time, setTime] = useState(new Date())
-
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
-
-  const istTime = time.toLocaleTimeString('en-IN', {
+function TopBar({ satelliteCount, onToggleList, isListOpen, simulatedTime, isLive }) {
+  const istTime = simulatedTime.toLocaleTimeString('en-IN', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: false,
   })
 
-  const istDate = time.toLocaleDateString('en-IN', {
+  const istDate = simulatedTime.toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -98,23 +91,23 @@ function TopBar({ satelliteCount, onToggleList, isListOpen }) {
           gap: '6px',
           padding: '4px 10px',
           borderRadius: 'var(--radius-pill)',
-          background: 'rgba(107, 191, 138, 0.1)',
-          border: '1px solid rgba(107, 191, 138, 0.15)',
+          background: isLive ? 'rgba(107, 191, 138, 0.1)' : 'rgba(212, 165, 94, 0.1)',
+          border: isLive ? '1px solid rgba(107, 191, 138, 0.15)' : '1px solid rgba(212, 165, 94, 0.15)',
         }}>
           <div style={{
             width: '6px',
             height: '6px',
             borderRadius: '50%',
-            background: 'var(--status-nominal)',
-            animation: 'pulse-dot 2s ease-in-out infinite',
+            background: isLive ? 'var(--status-nominal)' : 'var(--status-caution)',
+            animation: isLive ? 'pulse-dot 2s ease-in-out infinite' : 'none',
           }} />
           <span style={{
             fontSize: '11px',
             fontWeight: 600,
-            color: 'var(--status-nominal)',
+            color: isLive ? 'var(--status-nominal)' : 'var(--status-caution)',
             letterSpacing: '0.02em',
           }}>
-            Live
+            {isLive ? 'Live' : 'Simulated'}
           </span>
         </div>
 

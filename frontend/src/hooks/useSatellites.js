@@ -4,7 +4,7 @@ import { getCurrentPosition } from '../lib/propogator'
 
 console.log('useSatellites module loaded')
 
-export function useSatellites() {
+export function useSatellites(timeOffset = 0) {
   const [satellites, setSatellites] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -13,10 +13,12 @@ export function useSatellites() {
 
   // Compute and update live positions
   function computePositions(satsWithTLE) {
+    const simulatedTime = new Date(Date.now() + timeOffset)
+
     const enriched = satsWithTLE.map(sat => {
       if (!sat.tle) return { ...sat, position: null }
 
-      const position = getCurrentPosition(sat.tle)
+      const position = getCurrentPosition(sat.tle, simulatedTime)
       return { ...sat, position: position || null }
     })
 
@@ -40,7 +42,7 @@ export function useSatellites() {
         computePositions(satsWithTLE)
         setLoading(false)
 
-        // Step 3 — recompute positions every 5 seconds
+        // Step 3 — recompute positions every 100ms
         // TLE data itself is re-fetched every 6 hours (below)
         intervalRef.current = setInterval(() => {
           computePositions(satellitesRef.current)
@@ -73,6 +75,13 @@ export function useSatellites() {
       clearInterval(tleRefreshInterval)
     }
   }, [])
+
+  // Recompute if timeOffset changes significantly or when we just want to update
+  useEffect(() => {
+    if (satellitesRef.current.length > 0) {
+      computePositions(satellitesRef.current)
+    }
+  }, [timeOffset])
 
   return { satellites, loading, error }
 }
