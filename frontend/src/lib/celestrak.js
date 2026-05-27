@@ -1,7 +1,7 @@
 import { SATELLITES } from '../data/satellites'
 import { fetchTLEs } from './api'
 
-export async function fetchAllTLEs() {
+export async function fetchAllTLEs(options = {}) {
   // Collect NORAD IDs for satellites that have them
   const fetchable = SATELLITES.filter(s => s.noradId)
   const noradIds = fetchable.map(s => s.noradId)
@@ -9,11 +9,9 @@ export async function fetchAllTLEs() {
   let tleMap = {}
 
   try {
-    tleMap = await fetchTLEs(noradIds)
-    const successCount = Object.values(tleMap).filter(Boolean).length
-    console.log(`TLE data received for ${successCount}/${SATELLITES.length} satellites`)
-  } catch (err) {
-    console.error('Backend TLE fetch failed:', err.message)
+    tleMap = await fetchTLEs(noradIds, options)
+  } catch {
+    tleMap = {}
   }
 
   return SATELLITES.map(sat => {

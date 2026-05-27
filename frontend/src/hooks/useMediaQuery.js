@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react'
 
 export function useMediaQuery(query) {
-  const [matches, setMatches] = useState(false)
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches)
 
   useEffect(() => {
     const media = window.matchMedia(query)
-    if (media.matches !== matches) {
-      setMatches(media.matches)
-    }
+    setMatches(media.matches)
+
     const listener = () => setMatches(media.matches)
-    media.addEventListener('change', listener)
-    return () => media.removeEventListener('change', listener)
-  }, [matches, query])
+    if (typeof media.addEventListener === 'function') {
+      media.addEventListener('change', listener)
+      return () => media.removeEventListener('change', listener)
+    }
+
+    media.addListener(listener)
+    return () => media.removeListener(listener)
+  }, [query])
 
   return matches
 }

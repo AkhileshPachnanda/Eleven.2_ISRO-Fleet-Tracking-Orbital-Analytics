@@ -43,7 +43,7 @@ const cloudFragmentShader = `
 `
 
 // GlobeView renders the Earth sphere + cloud layer + atmosphere
-function GlobeView({ isInteracting }) {
+function GlobeView() {
   const earthRef = useRef()
   const cloudRef = useRef()
   const atmosphereRef = useRef()

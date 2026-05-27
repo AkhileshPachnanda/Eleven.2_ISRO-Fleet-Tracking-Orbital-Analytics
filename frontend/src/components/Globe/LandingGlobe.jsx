@@ -1,4 +1,4 @@
-import { useRef, useEffect, Suspense, useMemo } from 'react'
+import { useRef, Suspense, useMemo } from 'react'
 import { Canvas, useFrame, useLoader } from '@react-three/fiber'
 import { Stars, OrbitControls } from '@react-three/drei'
 import { TextureLoader } from 'three'

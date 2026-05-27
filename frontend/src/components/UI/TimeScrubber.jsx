@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 
 // Range: +/- 2 days in milliseconds (96 hours total)
@@ -17,7 +17,7 @@ function TimeScrubber({ timeOffset, setTimeOffset }) {
     }
   }, [timeOffset, isScrubbing])
 
-  const calculateOffset = (e) => {
+  const calculateOffset = useCallback((e) => {
     if (!trackRef.current) return
     const rect = trackRef.current.getBoundingClientRect()
     // Calculate percentage (0 to 1)
@@ -33,12 +33,12 @@ function TimeScrubber({ timeOffset, setTimeOffset }) {
     
     setLocalOffset(newOffset)
     setTimeOffset(newOffset)
-  }
+  }, [setTimeOffset])
 
   const handlePointerDown = (e) => {
     setIsScrubbing(true)
     calculateOffset(e)
-    e.target.setPointerCapture(e.pointerId)
+    e.currentTarget.setPointerCapture(e.pointerId)
   }
 
   const handlePointerMove = (e) => {
@@ -48,24 +48,25 @@ function TimeScrubber({ timeOffset, setTimeOffset }) {
 
   const handlePointerUp = (e) => {
     setIsScrubbing(false)
-    e.target.releasePointerCapture(e.pointerId)
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    }
   }
 
   // Smooth wheel scrolling for high-precision time adjustments
-  const handleWheel = (e) => {
-    // Prevent default scroll behavior
+  const handleWheel = useCallback((e) => {
     e.preventDefault()
     
-    // Adjust by 15 minutes per wheel tick
-    const adjustment = Math.sign(e.deltaY) *  2* 60 * 1000
-    let newOffset = localOffset + adjustment
-    
-    // Clamp to boundaries
-    newOffset = Math.max(-MAX_OFFSET_MS, Math.min(MAX_OFFSET_MS, newOffset))
-    
-    setLocalOffset(newOffset)
-    setTimeOffset(newOffset)
-  }
+    const adjustment = Math.sign(e.deltaY) * 2 * 60 * 1000
+    setLocalOffset((previousOffset) => {
+      const nextOffset = Math.max(
+        -MAX_OFFSET_MS,
+        Math.min(MAX_OFFSET_MS, previousOffset + adjustment)
+      )
+      setTimeOffset(nextOffset)
+      return nextOffset
+    })
+  }, [setTimeOffset])
 
   // Bind non-passive wheel event directly to ref to prevent page scrolling
   useEffect(() => {
@@ -74,7 +75,7 @@ function TimeScrubber({ timeOffset, setTimeOffset }) {
     const onWheel = (e) => handleWheel(e)
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
-  }, [localOffset])
+  }, [handleWheel])
 
   // Calculate percentage for visual thumb position
   const percent = ((localOffset + MAX_OFFSET_MS) / (2 * MAX_OFFSET_MS)) * 100

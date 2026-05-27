@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 
 function TopBar({ satelliteCount, onToggleList, isListOpen, simulatedTime, isLive }) {

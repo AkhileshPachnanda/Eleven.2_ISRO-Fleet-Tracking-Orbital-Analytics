@@ -3,9 +3,6 @@ import * as THREE from 'three'
 /**
  * TexturePreloader — singleton service that background-loads textures
  * into THREE.Cache so they're instant when the dashboard mounts.
- *
- * Call `preloadDashboardTextures()` on the Landing page.
- * Call `getTexture(key)` in GlobeView to retrieve cached textures.
  */
 
 // Enable THREE.js built-in cache
@@ -16,7 +13,6 @@ const TEXTURE_MANIFEST = {
   earthDay8k: '/assets/textures/earth_daymap_8k.jpg',
   earthClouds8k: '/assets/textures/earth_clouds_8k.jpg',
   earthBump4k: '/assets/textures/earth_bump_4k.jpg',
-  earthNight8k: '/assets/textures/earth_nightmap_8k.jpg',
 
   // Lightweight textures (for Landing page)
   earthDay2k: '/assets/textures/earth_daymap_2k.jpg',
@@ -60,31 +56,15 @@ function loadTexture(key) {
         resolve(texture)
       },
       undefined, // onProgress — not useful for individual textures
-      (err) => {
+      () => {
         loadingPromises.delete(key)
-        console.warn(`[TexturePreloader] Failed to load ${key}:`, err)
-        reject(err)
+        reject(new Error(`Failed to load texture: ${key}`))
       }
     )
   })
 
   loadingPromises.set(key, promise)
   return promise
-}
-
-/**
- * Get a texture synchronously if already cached, or null.
- * Use this in render loops where you can't await.
- */
-function getTextureSync(key) {
-  return textureCache.get(key) || null
-}
-
-/**
- * Get or load a texture — returns a Promise<THREE.Texture>.
- */
-function getTexture(key) {
-  return loadTexture(key)
 }
 
 /**
@@ -126,10 +106,6 @@ function preloadCommandCenterChunk() {
 }
 
 export {
-  TEXTURE_MANIFEST,
-  loadTexture,
-  getTexture,
-  getTextureSync,
   preloadDashboardTextures,
   preloadCommandCenterChunk,
 }

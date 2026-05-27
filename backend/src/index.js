@@ -36,12 +36,4 @@ app.use((req, res) => {
 // Error handler — must be last
 app.use(errorHandler)
 
-app.listen(PORT, () => {
-  console.log(`
-  ╔════════════════════════════════════╗
-  ║   ISRO Mission Control Backend     ║
-  ║   Status: NOMINAL                  ║
-  ║   Port:   ${PORT}                     ║
-  ╚════════════════════════════════════╝
-  `)
-})
+app.listen(PORT)

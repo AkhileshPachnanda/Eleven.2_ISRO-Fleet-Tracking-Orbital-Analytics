@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import TopBar from '../components/TopBar/TopBar'
 import GlobeCanvas from '../components/Globe/GlobeCanvas'
@@ -10,7 +10,7 @@ import { useSatellites } from '../hooks/useSatellites'
 import { fetchMissionIntel } from '../lib/api'
 
 function CommandCenter() {
-  const [selectedSatellite, setSelectedSatellite] = useState(null)
+  const [selectedSatelliteId, setSelectedSatelliteId] = useState(null)
   const [isListOpen, setIsListOpen] = useState(false)
   const [intelBySatellite, setIntelBySatellite] = useState({})
   const [intelLoading, setIntelLoading] = useState(false)
@@ -18,63 +18,57 @@ function CommandCenter() {
   const [timeOffset, setTimeOffset] = useState(0)
   const intelCacheRef = useRef({})
   const { satellites, loading, error } = useSatellites(timeOffset)
-  
-  // Real-time tick to keep simulatedTime advancing
+
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(timer)
   }, [])
-  
-  const simulatedTime = new Date(now + timeOffset)
+
+  const selectedSatellite = useMemo(
+    () => satellites.find((sat) => sat.id === selectedSatelliteId) || null,
+    [satellites, selectedSatelliteId]
+  )
+  const simulatedTime = useMemo(() => new Date(now + timeOffset), [now, timeOffset])
   const isLive = Math.abs(timeOffset) < 1000
 
-  // Fetch mission intel when satellite selected
   useEffect(() => {
-    let cancelled = false
+    const controller = new AbortController()
 
     async function loadIntel() {
       if (!selectedSatellite) {
-        if (!cancelled) {
-          setIntelLoading(false)
-          setIntelError(null)
-        }
+        setIntelLoading(false)
+        setIntelError(null)
         return
       }
 
       const cacheKey = selectedSatellite.id
       const cachedIntel = intelCacheRef.current[cacheKey]
       if (cachedIntel) {
-        if (!cancelled) {
-          setIntelLoading(false)
-          setIntelError(null)
-        }
+        setIntelLoading(false)
+        setIntelError(null)
         return
       }
 
-      if (!cancelled) {
-        setIntelLoading(true)
-        setIntelError(null)
-      }
+      setIntelLoading(true)
+      setIntelError(null)
 
       try {
-        const intel = await fetchMissionIntel(selectedSatellite)
-        if (!cancelled) {
-          intelCacheRef.current = {
-            ...intelCacheRef.current,
-            [cacheKey]: intel
-          }
-          setIntelBySatellite((prev) => ({
-            ...prev,
-            [cacheKey]: intel
-          }))
+        const intel = await fetchMissionIntel(selectedSatellite, { signal: controller.signal })
+        intelCacheRef.current = {
+          ...intelCacheRef.current,
+          [cacheKey]: intel
         }
+        setIntelBySatellite((prev) => ({
+          ...prev,
+          [cacheKey]: intel
+        }))
       } catch (err) {
-        if (!cancelled) {
+        if (err.name !== 'AbortError') {
           setIntelError(err.message || 'Failed to load mission summary')
         }
       } finally {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setIntelLoading(false)
         }
       }
@@ -83,21 +77,26 @@ function CommandCenter() {
     loadIntel()
 
     return () => {
-      cancelled = true
+      controller.abort()
     }
   }, [selectedSatellite?.id])
 
-  // Handle satellite selection
-  function handleSelectSatellite(sat) {
-    if (selectedSatellite?.id === sat.id) {
-      // Deselect if clicking same satellite
-      setSelectedSatellite(null)
-    } else {
-      setSelectedSatellite(sat)
-    }
-  }
+  const handleSelectSatellite = useCallback((sat) => {
+    setSelectedSatelliteId((previousId) => (previousId === sat.id ? null : sat.id))
+  }, [])
 
-  // Error state
+  const handleToggleList = useCallback(() => {
+    setIsListOpen((previous) => !previous)
+  }, [])
+
+  const handleCloseList = useCallback(() => {
+    setIsListOpen(false)
+  }, [])
+
+  const handleCloseDetails = useCallback(() => {
+    setSelectedSatelliteId(null)
+  }, [])
+
   if (error) {
     return (
       <div style={{
@@ -156,7 +155,7 @@ function CommandCenter() {
       {/* Top bar */}
       <TopBar
         satelliteCount={satellites.length}
-        onToggleList={() => setIsListOpen(prev => !prev)}
+        onToggleList={handleToggleList}
         isListOpen={isListOpen}
         simulatedTime={simulatedTime}
         isLive={isLive}
@@ -183,7 +182,7 @@ function CommandCenter() {
         selectedSatellite={selectedSatellite}
         onSelectSatellite={handleSelectSatellite}
         isOpen={isListOpen}
-        onClose={() => setIsListOpen(false)}
+        onClose={handleCloseList}
       />
 
       {/* Satellite detail drawer (right) */}
@@ -193,7 +192,7 @@ function CommandCenter() {
         intelLoading={intelLoading}
         intelError={intelError}
         isOpen={!!selectedSatellite}
-        onClose={() => setSelectedSatellite(null)}
+        onClose={handleCloseDetails}
       />
 
       {/* Orbit legend */}

@@ -14,13 +14,17 @@ function GroundTrack({ satellite, timeOffset = 0 }) {
     return track.map(([lat, lng, alt]) =>
       latLngToVector3(lat, lng, 1 + (alt || 0.05))
     )
-  }, [satellite?.id])
+  }, [satellite?.tle, timeOffset])
 
-  if (points.length < 2) return null
+  const geometry = useMemo(() => {
+    if (points.length < 2) return null
 
-  const curve = new CatmullRomCurve3(points)
-  const curvePoints = curve.getPoints(1000)
-  const geometry = new BufferGeometry().setFromPoints(curvePoints)
+    const curve = new CatmullRomCurve3(points)
+    const curvePoints = curve.getPoints(360)
+    return new BufferGeometry().setFromPoints(curvePoints)
+  }, [points])
+
+  if (!geometry) return null
 
   return (
     <line geometry={geometry}>

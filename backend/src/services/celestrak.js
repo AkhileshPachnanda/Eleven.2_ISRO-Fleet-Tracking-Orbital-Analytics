@@ -58,22 +58,22 @@ export async function fetchTLEById(noradId) {
   return { ...result, source: 'live' }
 }
 
-// Fetch TLEs for multiple NORAD IDs in parallel
+// Fetch TLEs for multiple NORAD IDs sequentially to prevent rate limiting
 export async function fetchTLEBatch(noradIds) {
-  const results = await Promise.allSettled(
-    noradIds.map(id => fetchTLEById(id))
-  )
-
   const tleMap = {}
 
-  results.forEach((result, i) => {
-    if (result.status === 'fulfilled') {
-      tleMap[noradIds[i]] = result.value
-    } else {
-      console.warn(`TLE fetch failed for ${noradIds[i]}: ${result.reason.message}`)
-      tleMap[noradIds[i]] = null
+  // Celestrak restricts IPs that make >15 concurrent connections.
+  // We process these sequentially to be polite and avoid 503 errors.
+  for (const id of noradIds) {
+    try {
+      tleMap[id] = await fetchTLEById(id)
+      // Polite delay between requests
+      await new Promise(resolve => setTimeout(resolve, 50))
+    } catch (err) {
+      console.warn(`Failed to fetch TLE for NORAD ID ${id}:`, err.message)
+      tleMap[id] = null
     }
-  })
+  }
 
   return tleMap
 }

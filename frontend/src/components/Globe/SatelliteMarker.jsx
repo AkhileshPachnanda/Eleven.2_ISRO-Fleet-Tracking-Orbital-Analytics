@@ -33,6 +33,7 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
   
   // Load the appropriate 3D model
   const { scene } = useGLTF(isISS ? '/assets/ISS_stationary.glb' : '/assets/satellite.glb')
+  const modelScene = useMemo(() => (isSelected ? scene.clone() : null), [scene, isSelected])
 
   const position = satellite.position
   if (!position) return null
@@ -68,9 +69,6 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
     }
   })
 
-  // Determine if we should show the 3D model (camera is close enough + selected)
-  const showModel = isSelected && cameraDistRef.current < 2.5
-
   return (
     <group
       position={pos}
@@ -85,7 +83,7 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
       {isSelected && (
         <primitive
           ref={modelRef}
-          object={scene.clone()}
+          object={modelScene}
           scale={isISS ? [0.001, 0.001, 0.001] : [0.01, 0.01, 0.01]} // Significantly scale down ISS
           rotation={isISS ? [0, 0, 0] : [-30, 5, 0]}
         />

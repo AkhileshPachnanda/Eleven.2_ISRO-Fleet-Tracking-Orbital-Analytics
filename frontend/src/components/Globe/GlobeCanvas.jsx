@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, Suspense, useCallback } from 'react'
+import { useRef, useState, useEffect, Suspense, useCallback, useMemo } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import * as THREE from 'three'
@@ -37,7 +37,7 @@ function CameraAnimator({ selectedSatellite, controlsRef, onAnimationStateChange
       onAnimationStateChange(true) // Lock controls during animation
       prevSelectedRef.current = null
     }
-  }, [selectedSatellite?.id, selectedSatellite?.position?.lat, selectedSatellite?.position?.lng])
+  }, [onAnimationStateChange, selectedSatellite?.id])
 
   useFrame(() => {
     if (!isAnimatingRef.current || !targetRef.current) return
@@ -88,9 +88,12 @@ function SunLight({ timeOffset = 0 }) {
 }
 
 function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite, timeOffset = 0 }) {
-  const [isInteracting, setIsInteracting] = useState(false)
   const [isCameraAnimating, setIsCameraAnimating] = useState(false)
   const controlsRef = useRef()
+  const visibleSatellites = useMemo(
+    () => satellites.filter((satellite) => satellite.position),
+    [satellites]
+  )
 
   const handleAnimationStateChange = useCallback((animating) => {
     setIsCameraAnimating(animating)
@@ -123,8 +126,6 @@ function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite, ti
           toneMappingExposure: 1.2,
         }}
         style={{ background: '#1a1a1e' }}
-        onPointerDown={() => setIsInteracting(true)}
-        onPointerUp={() => setIsInteracting(false)}
       >
         {/* Lighting */}
         <ambientLight intensity={0.25} />
@@ -142,11 +143,9 @@ function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite, ti
 
         {/* Globe + Satellites */}
         <Suspense fallback={null}>
-          <GlobeView isInteracting={isInteracting} />
+          <GlobeView />
 
-          {satellites
-            .filter(sat => sat.position)
-            .map(sat => (
+          {visibleSatellites.map((sat) => (
               <SatelliteMarker
                 key={sat.id}
                 satellite={sat}
