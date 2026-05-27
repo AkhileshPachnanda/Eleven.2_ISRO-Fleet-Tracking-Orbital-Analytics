@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: isro-backend
+    ports:
+      # Maps your computer's port 3001 to the container's port 3001
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+    # Injects your local GROQ_API_KEY directly into the container
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Tells the frontend to talk to the backend on localhost:3001
+        # (In a real cloud deployment, you'd change this to your backend's public domain)
+        - VITE_API_URL=http://localhost:3001
+    container_name: isro-frontend
+    ports:
+      # Maps your computer's port 5173 to the container's Nginx server
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped

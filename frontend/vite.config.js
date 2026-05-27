@@ -7,4 +7,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    target: 'esnext'
+  },
+  worker: {
+    format: 'es'
+  }
 })

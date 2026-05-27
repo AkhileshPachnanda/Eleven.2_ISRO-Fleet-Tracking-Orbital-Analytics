@@ -2,8 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { fetchAllTLEs } from '../lib/celestrak'
 import { getCurrentPosition } from '../lib/propogator'
 
-console.log('useSatellites module loaded')
-
 export function useSatellites(timeOffset = 0) {
   const [satellites, setSatellites] = useState([])
   const [loading, setLoading] = useState(true)
@@ -35,17 +33,13 @@ export function useSatellites(timeOffset = 0) {
   useEffect(() => {
     if (hasFetchedRef.current) return
     hasFetchedRef.current = true
-    
-    console.log('useEffect running')
     async function init() {
       try {
         setLoading(true)
         setError(null)
 
         // Step 1 — fetch live TLEs from CelesTrak
-        console.log('Fetching TLE data from CelesTrak...')
         const satsWithTLE = await fetchAllTLEs()
-        console.log(`TLE data received for ${satsWithTLE.filter(s => s.tle).length}/${satsWithTLE.length} satellites`)
 
         // Step 2 — compute initial positions immediately
         computePositions(satsWithTLE)
