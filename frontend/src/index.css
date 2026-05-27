@@ -3,10 +3,10 @@
 
 :root {
   /* ── Surfaces ── */
-  --bg-primary: #1a1a1e;
-  --bg-secondary: #232328;
-  --bg-elevated: #2a2a30;
-  --bg-overlay: rgba(26, 26, 30, 0.85);
+  --bg-primary: #0c0a0a;
+  --bg-secondary: rgb(11, 11, 11);
+  --bg-elevated: rgb(18, 18, 18);
+  --bg-overlay: rgba(2, 2, 2, 0.85);
 
   /* ── Borders ── */
   --border-subtle: rgba(255, 255, 255, 0.06);
@@ -89,6 +89,10 @@ body {
   --color-status-nominal: #6BBF8A;
   --color-status-caution: #D4A55E;
   --color-status-alert: #D66B6B;
+
+  /* ── Keyframe animations for Tailwind animate-[] ── */
+  --animate-dot-bounce: dotBounce 1.4s ease-in-out infinite both;
+  --animate-pulse-dot: pulse-dot 2s ease-in-out infinite;
 }
 
 /* ── Three-dot bounce loader ── */
@@ -103,29 +107,8 @@ body {
   }
 }
 
-.three-dot-loader {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.three-dot-loader span {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #ffffff;
-  display: inline-block;
-  animation: dotBounce 1.4s infinite ease-in-out both;
-}
-
-.three-dot-loader span:nth-child(1) {
-  animation-delay: -0.32s;
-}
-
-.three-dot-loader span:nth-child(2) {
-  animation-delay: -0.16s;
-}
-
-.three-dot-loader span:nth-child(3) {
-  animation-delay: 0s;
+/* ── Pulse for live indicators ── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }

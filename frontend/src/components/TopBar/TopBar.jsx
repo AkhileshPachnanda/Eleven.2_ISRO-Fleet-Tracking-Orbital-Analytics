@@ -46,8 +46,8 @@ function TopBar({ satelliteCount, onToggleList, isListOpen, simulatedTime, isLiv
             height: '34px',
             borderRadius: 'var(--radius-md)',
             border: '1px solid var(--border-default)',
-            background: isListOpen ? 'var(--accent-muted)' : 'transparent',
-            color: isListOpen ? 'var(--accent)' : 'var(--text-secondary)',
+            background: isListOpen ? '#1d1d1dff' : 'transparent',
+            color: isListOpen ? '#ffffff' : 'var(--text-secondary)',
             cursor: 'pointer',
             transition: 'all 150ms ease',
           }}
@@ -61,12 +61,13 @@ function TopBar({ satelliteCount, onToggleList, isListOpen, simulatedTime, isLiv
 
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
           <span style={{
+            fontFamily: "'Space Grotesk', sans-serif",
             fontSize: '15px',
             fontWeight: 700,
             letterSpacing: '-0.01em',
             color: 'var(--text-primary)',
           }}>
-            ISRO Satellites
+            Eleven.2
           </span>
           {!isMobile && (
             <span style={{
@@ -95,21 +96,21 @@ function TopBar({ satelliteCount, onToggleList, isListOpen, simulatedTime, isLiv
           gap: '6px',
           padding: '4px 10px',
           borderRadius: 'var(--radius-pill)',
-          background: isLive ? 'rgba(107, 191, 138, 0.1)' : 'rgba(212, 165, 94, 0.1)',
-          border: isLive ? '1px solid rgba(107, 191, 138, 0.15)' : '1px solid rgba(212, 165, 94, 0.15)',
+          background: isLive ? 'rgba(56, 56, 56, 0.1)' : 'rgba(212, 94, 198, 0.1)',
+          border: isLive ? '1px solid rgba(190, 190, 190, 0.15)' : '1px solid rgba(212, 165, 94, 0.15)',
         }}>
           <div style={{
             width: '6px',
             height: '6px',
-            borderRadius: '50%',
-            background: isLive ? 'var(--status-nominal)' : 'var(--status-caution)',
+            borderRadius: '100%',
+            background: isLive ? '#ffffff' : 'var(--status-caution)',
             animation: isLive ? 'pulse-dot 2s ease-in-out infinite' : 'none',
           }} />
           <span style={{
             fontSize: '11px',
             fontWeight: 600,
-            color: isLive ? 'var(--status-nominal)' : 'var(--status-caution)',
-            letterSpacing: '0.02em',
+            letterSpacing: '0.05em',
+            color: isLive ? '#ffffff' : 'var(--status-caution)',
           }}>
             {isLive ? 'Live' : 'Simulated'}
           </span>
@@ -124,25 +125,18 @@ function TopBar({ satelliteCount, onToggleList, isListOpen, simulatedTime, isLiv
           {istTime}
         </span>
 
-        {!isMobile && (
-          <span style={{
-            fontSize: '12px',
-            color: 'var(--text-tertiary)',
-          }}>
-            {istDate}
-          </span>
-        )}
+        
       </div>
 
-      {/* Right — IST label (hidden on mobile) */}
+      
       {!isMobile && (
-        <div style={{
+        <div className="font-data" style={{
           fontSize: '11px',
           fontWeight: 500,
-          color: 'var(--text-tertiary)',
+          color: 'var(--text-secondry)',
           letterSpacing: '0.02em',
         }}>
-          IST
+          {istDate}
         </div>
       )}
     </header>

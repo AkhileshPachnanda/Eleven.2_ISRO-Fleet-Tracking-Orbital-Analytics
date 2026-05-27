@@ -25,14 +25,14 @@ function CameraAnimator({ selectedSatellite, controlsRef, onAnimationStateChange
 
       // Position camera along the vector from center to satellite, pulled back
       const direction = satPos.clone().normalize()
-      const cameraDistance = radius + 0.6
+      const cameraDistance = radius + 0.5
       targetRef.current = direction.multiplyScalar(cameraDistance)
       isAnimatingRef.current = true
       onAnimationStateChange(true) // Lock controls during animation
       prevSelectedRef.current = selectedSatellite.id
     } else if (!selectedSatellite && prevSelectedRef.current) {
       // Zoom back out when deselected
-      targetRef.current = new THREE.Vector3(0, 0, 3.5)
+      targetRef.current = new THREE.Vector3(0, 0, 4.5)
       isAnimatingRef.current = true
       onAnimationStateChange(true) // Lock controls during animation
       prevSelectedRef.current = null
@@ -42,7 +42,7 @@ function CameraAnimator({ selectedSatellite, controlsRef, onAnimationStateChange
   useFrame(() => {
     if (!isAnimatingRef.current || !targetRef.current) return
 
-    camera.position.lerp(targetRef.current, 0.03)
+    camera.position.lerp(targetRef.current, 0.05)
     const distance = camera.position.distanceTo(targetRef.current)
 
     if (controlsRef.current) {
@@ -114,30 +114,29 @@ function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite, ti
       <Canvas
         camera={{
           position: [0, 0, 3.5],
-          fov: 45,
-          near: 0.1,
+          fov: 65,
+          near: 0.5,
           far: 1000,
         }}
-        dpr={[1, 1.5]}
+        dpr={[1, 1.4]}
         gl={{
           powerPreference: 'high-performance',
           antialias: true,
           toneMapping: THREE.ACESFilmicToneMapping,
           toneMappingExposure: 1.2,
         }}
-        style={{ background: '#1a1a1e' }}
+        style={{ background: '#080808ff' }}
       >
         {/* Lighting */}
         <ambientLight intensity={0.25} />
         <SunLight timeOffset={timeOffset} />
 
-        {/* Subtle, premium stars — visible but not overpowering */}
         <Stars
           radius={100}
           depth={60}
           count={3000}
-          factor={4}
-          saturation={0.1}
+          factor={4.5}
+          saturation={0.5}
           fade
         />
 
