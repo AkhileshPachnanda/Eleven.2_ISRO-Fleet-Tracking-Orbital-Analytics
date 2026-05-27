@@ -52,6 +52,7 @@ function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, is
           drag={isMobile ? 'y' : false}
           dragControls={dragControls}
           dragListener={false}
+          dragMomentum={false}
           dragConstraints={{
             top: 0,
             bottom: snapPoints.collapsed
@@ -81,6 +82,7 @@ function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, is
           style={{
             position: 'absolute',
             background: 'var(--bg-secondary)',
+            zIndex: isMobile ? 60 : 40,
             ...(isMobile ? {
               bottom: 0,
               left: 0,
@@ -89,7 +91,6 @@ function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, is
               height: '92vh',
               borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
               borderTop: '1px solid var(--border-subtle)',
-              zIndex: 50,
             } : {
               top: '60px',
               right: '8px',
@@ -97,7 +98,6 @@ function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, is
               width: '360px',
               borderRadius: 'var(--radius-lg)',
               border: '1px solid var(--border-subtle)',
-              zIndex: 40,
             }),
             display: 'flex',
             flexDirection: 'column',
@@ -128,13 +128,21 @@ function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, is
           )}
 
           {/* Header */}
-          <div style={{
-            padding: isMobile ? '4px 16px 16px' : '16px',
-            borderBottom: snapState === 'collapsed' && isMobile ? 'none' : '1px solid var(--border-subtle)',
-            display: 'flex',
-            flexDirection: 'column',
-            position: 'relative',
-          }}>
+          <div
+            onPointerDown={(e) => {
+              if (e.target.tagName !== 'BUTTON' && e.target.closest('button') === null) {
+                dragControls.start(e)
+              }
+            }}
+            style={{
+              padding: isMobile ? '4px 16px 16px' : '16px',
+              borderBottom: snapState === 'collapsed' && isMobile ? 'none' : '1px solid var(--border-subtle)',
+              display: 'flex',
+              flexDirection: 'column',
+              position: 'relative',
+              cursor: isMobile ? 'grab' : 'default',
+            }}
+          >
             <div style={{
               display: 'flex',
               alignItems: 'flex-start',
@@ -223,116 +231,111 @@ function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, is
             </div>
           </div>
 
-          {/* Scrollable content — hidden in collapsed state on mobile */}
-          <AnimatePresence>
-            {!(isMobile && snapState === 'collapsed') && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                style={{
-                  flex: 1,
-                  overflowY: 'auto',
-                }}
-              >
-                {/* Live telemetry */}
-                <Section title="Live telemetry" delay={0}>
-                  <DataRow
-                    label="Latitude"
-                    value={satellite.position ? `${satellite.position.lat.toFixed(4)}°` : '—'}
-                    live
-                  />
-                  <DataRow
-                    label="Longitude"
-                    value={satellite.position ? `${satellite.position.lng.toFixed(4)}°` : '—'}
-                    live
-                  />
-                  <DataRow
-                    label="Altitude"
-                    value={satellite.position ? `${Math.round(satellite.position.alt)} km` : '—'}
-                    live
-                  />
-                  <DataRow
-                    label="Velocity"
-                    value={satellite.position ? `${satellite.position.velocity.toFixed(2)} km/s` : '—'}
-                    live
-                  />
-                </Section>
+          {/* Scrollable content */}
+          <div
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              opacity: isMobile && snapState === 'collapsed' ? 0 : 1,
+              pointerEvents: isMobile && snapState === 'collapsed' ? 'none' : 'auto',
+              transition: 'opacity 150ms ease',
+            }}
+          >
+            {/* Live telemetry */}
+            <Section title="Live telemetry" delay={0}>
+              <DataRow
+                label="Latitude"
+                value={satellite.position ? `${satellite.position.lat.toFixed(4)}°` : '—'}
+                live
+              />
+              <DataRow
+                label="Longitude"
+                value={satellite.position ? `${satellite.position.lng.toFixed(4)}°` : '—'}
+                live
+              />
+              <DataRow
+                label="Altitude"
+                value={satellite.position ? `${Math.round(satellite.position.alt)} km` : '—'}
+                live
+              />
+              <DataRow
+                label="Velocity"
+                value={satellite.position ? `${satellite.position.velocity.toFixed(2)} km/s` : '—'}
+                live
+              />
+            </Section>
 
-                {/* Mission info */}
-                <Section title="Mission info" delay={0.05}>
-                  <DataRow label="Launched" value={satellite.launched} />
-                  <DataRow label="Mass" value={`${satellite.mass} kg`} />
-                  <DataRow label="Callsign" value={satellite.callsign} />
-                </Section>
+            {/* Mission info */}
+            <Section title="Mission info" delay={0.05}>
+              <DataRow label="Launched" value={satellite.launched} />
+              <DataRow label="Mass" value={`${satellite.mass} kg`} />
+              <DataRow label="Callsign" value={satellite.callsign} />
+            </Section>
 
 
-                {/* AI Mission Summary */}
-                <Section title="Mission summary" delay={0.15}>
-                  {intelLoading && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div className="skeleton" style={{ height: '14px', width: '100%' }} />
-                      <div className="skeleton" style={{ height: '14px', width: '85%' }} />
-                      <div className="skeleton" style={{ height: '14px', width: '70%' }} />
-                    </div>
-                  )}
-                  {!intelLoading && intelError && (
-                    <p style={{
-                      fontSize: '13px',
-                      lineHeight: 1.7,
-                      color: 'var(--status-alert)',
+            {/* AI Mission Summary */}
+            <Section title="Mission summary" delay={0.15}>
+              {intelLoading && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div className="skeleton" style={{ height: '14px', width: '100%' }} />
+                  <div className="skeleton" style={{ height: '14px', width: '85%' }} />
+                  <div className="skeleton" style={{ height: '14px', width: '70%' }} />
+                </div>
+              )}
+              {!intelLoading && intelError && (
+                <p style={{
+                  fontSize: '13px',
+                  lineHeight: 1.7,
+                  color: 'var(--status-alert)',
+                }}>
+                  {intelError}
+                </p>
+              )}
+              {!intelLoading && !intelError && missionIntel && (
+                <>
+                  <p style={{
+                    fontSize: '13px',
+                    lineHeight: 1.7,
+                    color: 'var(--text-secondary)',
+                  }}>
+                    {missionIntel}
+                  </p>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    marginTop: '6px',
+                    padding: '4px 8px',
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'var(--accent-subtle)',
+                    width: 'fit-content',
+                  }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                      <path d="M2 17l10 5 10-5" />
+                      <path d="M2 12l10 5 10-5" />
+                    </svg>
+                    <span style={{
+                      fontSize: '10px',
+                      fontWeight: 500,
+                      color: 'var(--accent)',
+                      letterSpacing: '0.02em',
                     }}>
-                      {intelError}
-                    </p>
-                  )}
-                  {!intelLoading && !intelError && missionIntel && (
-                    <>
-                      <p style={{
-                        fontSize: '13px',
-                        lineHeight: 1.7,
-                        color: 'var(--text-secondary)',
-                      }}>
-                        {missionIntel}
-                      </p>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        marginTop: '6px',
-                        padding: '4px 8px',
-                        borderRadius: 'var(--radius-sm)',
-                        background: 'var(--accent-subtle)',
-                        width: 'fit-content',
-                      }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                          <path d="M2 17l10 5 10-5" />
-                          <path d="M2 12l10 5 10-5" />
-                        </svg>
-                        <span style={{
-                          fontSize: '10px',
-                          fontWeight: 500,
-                          color: 'var(--accent)',
-                          letterSpacing: '0.02em',
-                        }}>
-                          Generated by AI
-                        </span>
-                      </div>
-                    </>
-                  )}
-                  {!intelLoading && !intelError && !missionIntel && (
-                    <p style={{
-                      fontSize: '13px',
-                      color: 'var(--text-tertiary)',
-                    }}>
-                      No summary available
-                    </p>
-                  )}
-                </Section>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                      Generated by AI
+                    </span>
+                  </div>
+                </>
+              )}
+              {!intelLoading && !intelError && !missionIntel && (
+                <p style={{
+                  fontSize: '13px',
+                  color: 'var(--text-tertiary)',
+                }}>
+                  No summary available
+                </p>
+              )}
+            </Section>
+          </div>
         </motion.aside>
       )}
     </AnimatePresence>
