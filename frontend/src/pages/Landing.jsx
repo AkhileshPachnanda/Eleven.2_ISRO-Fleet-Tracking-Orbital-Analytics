@@ -1,9 +1,17 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import LandingGlobe from '../components/Globe/LandingGlobe'
+import { preloadDashboardTextures, preloadCommandCenterChunk } from '../lib/texturePreloader'
 
 function Landing() {
   const navigate = useNavigate()
+
+  // Background preload: warm GPU texture cache + JS chunk while user reads hero
+  useEffect(() => {
+    preloadDashboardTextures()
+    preloadCommandCenterChunk()
+  }, [])
 
   return (
     <motion.div
