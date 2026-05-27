@@ -29,8 +29,10 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
   const [isHovered, setIsHovered] = useState(false)
   const { camera } = useThree()
 
-  // Load the 3D model (only instantiated when needed)
-  const { scene } = useGLTF('/assets/satellite.glb')
+  const isISS = satellite.id === 'iss' || satellite.noradId === 25544
+  
+  // Load the appropriate 3D model
+  const { scene } = useGLTF(isISS ? '/assets/ISS_stationary.glb' : '/assets/satellite.glb')
 
   const position = satellite.position
   if (!position) return null
@@ -84,8 +86,8 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
         <primitive
           ref={modelRef}
           object={scene.clone()}
-          scale={[0.02, 0.02, 0.02]}
-          rotation={[-30, 5, 0]}
+          scale={isISS ? [0.001, 0.001, 0.001] : [0.01, 0.01, 0.01]} // Significantly scale down ISS
+          rotation={isISS ? [0, 0, 0] : [-30, 5, 0]}
         />
       )}
 
@@ -162,3 +164,7 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
 
 export { latLngToVector3 }
 export default SatelliteMarker
+
+// Preload models for performance
+useGLTF.preload('/assets/satellite.glb')
+useGLTF.preload('/assets/ISS_stationary.glb')

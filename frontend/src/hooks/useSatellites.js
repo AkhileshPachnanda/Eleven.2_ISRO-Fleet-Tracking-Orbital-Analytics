@@ -11,6 +11,7 @@ export function useSatellites(timeOffset = 0) {
   const satellitesRef = useRef([])
   const timeOffsetRef = useRef(timeOffset)
   const intervalRef = useRef(null)
+  const hasFetchedRef = useRef(false)
 
   useEffect(() => {
     timeOffsetRef.current = timeOffset
@@ -32,6 +33,9 @@ export function useSatellites(timeOffset = 0) {
   }
 
   useEffect(() => {
+    if (hasFetchedRef.current) return
+    hasFetchedRef.current = true
+    
     console.log('useEffect running')
     async function init() {
       try {

@@ -115,6 +115,13 @@ function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite, ti
           near: 0.1,
           far: 1000,
         }}
+        dpr={[1, 1.5]}
+        gl={{
+          powerPreference: 'high-performance',
+          antialias: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.2,
+        }}
         style={{ background: '#1a1a1e' }}
         onPointerDown={() => setIsInteracting(true)}
         onPointerUp={() => setIsInteracting(false)}
