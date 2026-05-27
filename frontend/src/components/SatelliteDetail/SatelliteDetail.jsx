@@ -1,66 +1,39 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence, useDragControls } from 'framer-motion'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { STATUS_COLORS, ORBIT_COLORS } from '../../data/satellites'
-
-// Mobile snap points (percentage of viewport height from the bottom)
-const SNAP_COLLAPSED = 'calc(100vh - 105px)' // Only header peek visible
-const SNAP_HALF = '55vh'                      // Half-screen
-const SNAP_EXPANDED = '8vh'                   // Nearly full-screen
 
 function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, isOpen, onClose }) {
   const isMobile = useMediaQuery('(max-width: 768px)')
   const [snapState, setSnapState] = useState('half') // 'collapsed' | 'half' | 'expanded'
   const dragControls = useDragControls()
 
-  const handleDragEnd = useCallback((event, info) => {
-    const velocity = info.velocity.y
-    const offset = info.offset.y
+  const [windowHeight, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800)
 
-    // Fast swipe detection
-    if (velocity > 500) {
-      // Swiping down fast
-      if (snapState === 'expanded') {
-        setSnapState('half')
-      } else if (snapState === 'half') {
-        setSnapState('collapsed')
-      }
-      return
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handleResize = () => setWindowHeight(window.innerHeight)
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const snapPoints = useMemo(() => {
+    const panelHeight = windowHeight * 0.92
+    return {
+      expanded: 0,
+      half: panelHeight * 0.45,
+      collapsed: panelHeight - 145, // 145px visible peek for details
+      panelHeight
     }
+  }, [windowHeight])
 
-    if (velocity < -500) {
-      // Swiping up fast
-      if (snapState === 'collapsed') {
-        setSnapState('half')
-      } else if (snapState === 'half') {
-        setSnapState('expanded')
-      }
-      return
-    }
-
-    // Slow drag — decide based on distance
-    if (offset > 60) {
-      if (snapState === 'expanded') {
-        setSnapState('half')
-      } else if (snapState === 'half') {
-        setSnapState('collapsed')
-      }
-    } else if (offset < -60) {
-      if (snapState === 'collapsed') {
-        setSnapState('half')
-      } else if (snapState === 'half') {
-        setSnapState('expanded')
-      }
-    }
-  }, [snapState])
-
-  const getSnapTop = () => {
+  const getSnapY = useCallback(() => {
     switch (snapState) {
-      case 'collapsed': return SNAP_COLLAPSED
-      case 'expanded': return SNAP_EXPANDED
-      default: return SNAP_HALF
+      case 'collapsed': return snapPoints.collapsed
+      case 'expanded': return snapPoints.expanded
+      default: return snapPoints.half
     }
-  }
+  }, [snapState, snapPoints])
 
   return (
     <AnimatePresence
@@ -69,13 +42,42 @@ function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, is
       {isOpen && satellite && (
         <motion.aside
           key="satellite-detail"
-          initial={isMobile ? { y: '100%' } : { x: 380 }}
+          initial={isMobile ? { y: snapPoints.panelHeight } : { x: 380, y: 0 }}
           animate={isMobile
-            ? { y: 0, top: getSnapTop() }
-            : { x: 0 }
+            ? { y: getSnapY() }
+            : { x: 0, y: 0 }
           }
-          exit={isMobile ? { y: '100%' } : { x: 380 }}
+          exit={isMobile ? { y: snapPoints.panelHeight } : { x: 380, y: 0 }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+          drag={isMobile ? 'y' : false}
+          dragControls={dragControls}
+          dragListener={false}
+          dragConstraints={{
+            top: 0,
+            bottom: snapPoints.collapsed
+          }}
+          dragElastic={0.1}
+          onDragEnd={(event, info) => {
+            const currentY = getSnapY() + info.offset.y
+            const velocity = info.velocity.y
+            const projectedY = currentY + velocity * 0.15
+
+            const diffExpanded = Math.abs(projectedY - snapPoints.expanded)
+            const diffHalf = Math.abs(projectedY - snapPoints.half)
+            const diffCollapsed = Math.abs(projectedY - snapPoints.collapsed)
+
+            const minDiff = Math.min(diffExpanded, diffHalf, diffCollapsed)
+
+            if (projectedY > snapPoints.collapsed + 50) {
+              onClose()
+            } else if (minDiff === diffExpanded) {
+              setSnapState('expanded')
+            } else if (minDiff === diffCollapsed) {
+              setSnapState('collapsed')
+            } else {
+              setSnapState('half')
+            }
+          }}
           style={{
             position: 'absolute',
             background: 'var(--bg-secondary)',
@@ -84,6 +86,7 @@ function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, is
               left: 0,
               right: 0,
               width: '100%',
+              height: '92vh',
               borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
               borderTop: '1px solid var(--border-subtle)',
               zIndex: 50,
@@ -104,15 +107,15 @@ function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, is
         >
           {/* Drag handle area — mobile only */}
           {isMobile && (
-            <motion.div
-              drag="y"
-              dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={0.15}
-              onDragEnd={handleDragEnd}
+            <div
+              onPointerDown={(e) => dragControls.start(e)}
               style={{
-                padding: '10px 16px 6px',
+                padding: '12px 16px 8px',
                 cursor: 'grab',
                 touchAction: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
               <div style={{
@@ -120,9 +123,8 @@ function SatelliteDetail({ satellite, missionIntel, intelLoading, intelError, is
                 height: '4px',
                 borderRadius: '2px',
                 background: 'var(--border-default)',
-                margin: '0 auto',
               }} />
-            </motion.div>
+            </div>
           )}
 
           {/* Header */}

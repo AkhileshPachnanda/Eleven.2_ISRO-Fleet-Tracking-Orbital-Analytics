@@ -25,14 +25,14 @@ function CameraAnimator({ selectedSatellite, controlsRef, onAnimationStateChange
 
       // Position camera along the vector from center to satellite, pulled back
       const direction = satPos.clone().normalize()
-      const cameraDistance = radius + 0.5
+      const cameraDistance = radius + 1.0 // Increased distance to zoom a bit more out
       targetRef.current = direction.multiplyScalar(cameraDistance)
       isAnimatingRef.current = true
       onAnimationStateChange(true) // Lock controls during animation
       prevSelectedRef.current = selectedSatellite.id
     } else if (!selectedSatellite && prevSelectedRef.current) {
       // Zoom back out when deselected
-      targetRef.current = new THREE.Vector3(0, 0, 4.5)
+      targetRef.current = latLngToVector3(20.5937, 78.9629, 4.5)
       isAnimatingRef.current = true
       onAnimationStateChange(true) // Lock controls during animation
       prevSelectedRef.current = null
@@ -73,7 +73,7 @@ function SunLight({ timeOffset = 0 }) {
 
     // Declination (latitude)
     const lat = 23.45 * Math.sin((2 * Math.PI / 365) * (dayOfYear - 81))
-    
+
     // Subsolar longitude
     let lng = (12 - hour) * 15
     if (lng > 180) lng -= 360
@@ -103,6 +103,11 @@ function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite, ti
     }
   }, [])
 
+  const initialCameraPos = useMemo(() => {
+    const pos = latLngToVector3(20.5937, 78.9629, 3.5)
+    return [pos.x, pos.y, pos.z]
+  }, [])
+
   return (
     <div
       style={{
@@ -113,9 +118,9 @@ function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite, ti
     >
       <Canvas
         camera={{
-          position: [0, 0, 3.5],
-          fov: 65,
-          near: 0.5,
+          position: initialCameraPos,
+          fov: 45,
+          near: 0.6,
           far: 1000,
         }}
         dpr={[1, 1.4]}
@@ -145,13 +150,13 @@ function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite, ti
           <GlobeView />
 
           {visibleSatellites.map((sat) => (
-              <SatelliteMarker
-                key={sat.id}
-                satellite={sat}
-                isSelected={selectedSatellite?.id === sat.id}
-                onClick={onSelectSatellite}
-              />
-            ))}
+            <SatelliteMarker
+              key={sat.id}
+              satellite={sat}
+              isSelected={selectedSatellite?.id === sat.id}
+              onClick={onSelectSatellite}
+            />
+          ))}
 
           {selectedSatellite && <GroundTrack satellite={selectedSatellite} timeOffset={timeOffset} />}
         </Suspense>
@@ -167,7 +172,7 @@ function GlobeCanvas({ satellites = [], selectedSatellite, onSelectSatellite, ti
         <OrbitControls
           ref={controlsRef}
           enablePan={false}
-          minDistance={1.5}
+          minDistance={1.75} // Lock minimum zoom safely above the cloud / atmosphere layer
           maxDistance={50}
           rotateSpeed={0.3}
           zoomSpeed={0.8}

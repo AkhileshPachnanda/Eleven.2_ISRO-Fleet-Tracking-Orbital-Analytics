@@ -29,7 +29,7 @@ function GroundTrack({ satellite, timeOffset = 0 }) {
   return (
     <line geometry={geometry}>
       <lineBasicMaterial
-        color="#4F46E5"
+        color="#ffffff"
         transparent
         opacity={0.5}
       />

@@ -17,9 +17,9 @@ function latLngToVector3(lat, lng, radius) {
 
 // Orbit type colors (muted)
 const ORBIT_DOT_COLORS = {
-  LEO: '#6B93D6',
-  GEO: '#D4915E',
-  SSO: '#6BBF8A',
+  LEO: '#005eff',
+  GEO: '#d75f02',
+  SSO: '#00ba44',
 }
 
 function SatelliteMarker({ satellite, isSelected, onClick }) {
@@ -143,7 +143,7 @@ function SatelliteMarker({ satellite, isSelected, onClick }) {
             fontFamily: "'Plus Jakarta Sans', sans-serif",
             fontSize: isSelected ? '12px' : '11px',
             fontWeight: isSelected ? 600 : 500,
-            color: isSelected ? '#4F46E5' : 'rgba(255, 255, 255, 0.8)',
+            color: isSelected ? '#ffffffff' : 'rgba(255, 255, 255, 0.8)',
             whiteSpace: 'nowrap',
             userSelect: 'none',
             padding: '3px 8px',

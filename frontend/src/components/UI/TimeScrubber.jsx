@@ -136,7 +136,7 @@ function TimeScrubber({ timeOffset, setTimeOffset }) {
       bottom: isMobile ? '20px' : '40px',
       left: '50%',
       transform: 'translateX(-50%)',
-      zIndex: 40,
+      zIndex: isMobile ? 10 : 40,
       width: isMobile ? '95%' : '90%',
       maxWidth: '600px', // Adjusted size as requested
       display: 'flex',
@@ -308,6 +308,46 @@ function TimeScrubber({ timeOffset, setTimeOffset }) {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Elegant footer credits under the time scrubber */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '4px',
+        fontSize: isMobile ? '12px' : '14px',
+        color: 'rgba(255, 255, 255, 0.35)',
+        fontFamily: "'Inter', 'Plus Jakarta Sans', sans-serif",
+        letterSpacing: '0.02em',
+        marginTop: isMobile ? '6px' : '10px',
+        pointerEvents: 'auto',
+      }}>
+        <span>created by pacman.</span>
+        <span>contribute</span>
+        <a
+          href="https://github.com/AkhileshPachnanda/ISRO-Mission_Control"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: 'rgba(255, 255, 255, 0.65)',
+            textDecoration: 'none',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+            transition: 'all 150ms ease',
+            fontWeight: 500,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#E59C4F'
+            e.currentTarget.style.borderBottomColor = '#E59C4F'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.65)'
+            e.currentTarget.style.borderBottomColor = 'rgba(255, 255, 255, 0.2)'
+          }}
+        >
+          here
+        </a>
+        <span>.</span>
       </div>
     </div>
   )
