@@ -23,6 +23,10 @@ function stripPosition(satellite) {
   return rest
 }
 
+function hasOwnPosition(satellite) {
+  return Object.prototype.hasOwnProperty.call(satellite ?? {}, 'position')
+}
+
 export function useSatellites(timeOffset = 0) {
   const [satellites, setSatellites] = useState([])
   const [loading, setLoading] = useState(true)
@@ -56,7 +60,11 @@ export function useSatellites(timeOffset = 0) {
         const previous = previousSatellites[index]
         const position = sat.tle ? getCurrentPosition(sat.tle, simulatedTime) || null : null
 
-        if (previous?.id === sat.id && !hasPositionChanged(previous.position, position)) {
+        if (
+          previous?.id === sat.id &&
+          hasOwnPosition(previous) &&
+          !hasPositionChanged(previous.position, position)
+        ) {
           nextSatellites[index] = previous
           continue
         }

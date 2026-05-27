@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+PRODUCTION_REFACTOR_REPORT_2026-05-27.md
+handover.md

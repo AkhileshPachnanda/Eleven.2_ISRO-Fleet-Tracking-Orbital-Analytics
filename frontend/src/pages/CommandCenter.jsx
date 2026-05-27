@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import TopBar from '../components/TopBar/TopBar'
 import GlobeCanvas from '../components/Globe/GlobeCanvas'
 import SatelliteDrawer from '../components/SatelliteDrawer/SatelliteDrawer'
@@ -8,6 +8,7 @@ import OrbitLegend from '../components/UI/OrbitLegend'
 import TimeScrubber from '../components/UI/TimeScrubber'
 import { useSatellites } from '../hooks/useSatellites'
 import { fetchMissionIntel } from '../lib/api'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 
 function CommandCenter() {
   const [selectedSatelliteId, setSelectedSatelliteId] = useState(null)
@@ -18,6 +19,7 @@ function CommandCenter() {
   const [timeOffset, setTimeOffset] = useState(0)
   const intelCacheRef = useRef({})
   const { satellites, loading, error } = useSatellites(timeOffset)
+  const isMobile = useMediaQuery('(max-width: 768px)')
 
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
@@ -83,11 +85,22 @@ function CommandCenter() {
 
   const handleSelectSatellite = useCallback((sat) => {
     setSelectedSatelliteId((previousId) => (previousId === sat.id ? null : sat.id))
-  }, [])
+    // On mobile, close the list when selecting a satellite
+    if (isMobile) {
+      setIsListOpen(false)
+    }
+  }, [isMobile])
 
   const handleToggleList = useCallback(() => {
-    setIsListOpen((previous) => !previous)
-  }, [])
+    setIsListOpen((previous) => {
+      const nextOpen = !previous
+      // On mobile, close the detail panel when opening the list
+      if (isMobile && nextOpen) {
+        setSelectedSatelliteId(null)
+      }
+      return nextOpen
+    })
+  }, [isMobile])
 
   const handleCloseList = useCallback(() => {
     setIsListOpen(false)
@@ -152,6 +165,43 @@ function CommandCenter() {
         background: 'var(--bg-primary)',
       }}
     >
+      {/* Loading overlay — covers everything until satellites are ready */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            key="loader"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              zIndex: 100,
+              background: 'var(--bg-primary)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '24px',
+            }}
+          >
+            <div className="three-dot-loader">
+              <span />
+              <span />
+              <span />
+            </div>
+            <p style={{
+              fontSize: '13px',
+              fontWeight: 500,
+              color: 'var(--text-tertiary)',
+              letterSpacing: '0.02em',
+            }}>
+              Acquiring satellite telemetry…
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Top bar */}
       <TopBar
         satelliteCount={satellites.length}
@@ -161,7 +211,7 @@ function CommandCenter() {
         isLive={isLive}
       />
 
-      {/* Globe — fullscreen behind everything */}
+      {/* Globe — fullscreen behind everything, preloads while loader is visible */}
       <div style={{
         position: 'absolute',
         inset: 0,
