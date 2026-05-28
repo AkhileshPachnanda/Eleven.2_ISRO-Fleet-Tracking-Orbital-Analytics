@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import Landing from './pages/Landing'
 import CommandCenter from './pages/CommandCenter'
 import './App.css'
@@ -24,6 +25,7 @@ function App() {
     <BrowserRouter>
       <AnimatedRoutes />
       <Analytics />
+      <SpeedInsights />
     </BrowserRouter>
   )
 }
